@@ -80,6 +80,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 ├── 个人介绍.txt              # 用户原始资料（内容源头）
 ├── AGENTS.md                 # 本文件
 ├── README.md                 # 给人看的简短指引
+├── 技术架构.md               # 技术选型与整体结构说明（偏科普，改动前可先扫一遍）
 ├── site/                     # ★ 交付物：整个网站，可直接部署
 │   ├── index.html            # 首页（四段式：design / journal / notes / prof）
 │   ├── css/style.css         # ★ 全部样式，1266 行，15 个分节
