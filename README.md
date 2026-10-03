@@ -60,6 +60,21 @@ git add -A && git commit -m "改了什么"
 git log --oneline
 ```
 
+### 回档怎么办
+
+| 情况 | 怎么做 | 谁能做 |
+|---|---|---|
+| 改动还没提交，想全部丢掉 | `git checkout .` | 自己 / agent 都行 |
+| 某次已提交的改动想撤销 | `git revert <hash>`（安全，留记录） | 自己 / agent 都行 |
+| 想看看历史某个点的样子 | `git switch -c 试验 <hash>`（开分支，别直接切） | 自己 / agent 都行 |
+| 想让 main 强行退回某点 | `git reset --hard <hash>` ⚠️ 会丢提交 | **先问清楚再决定** |
+| 只回退某几行 | 需要逐行判断，无一键方案 | **建议自己上手** |
+
+**通用原则**：让 agent 回档之前，先让它把 `git status` 和 `git log --oneline` 报给你，
+确认要退到哪一步。回档前最好存一份备份分支：`git branch backup-YYYYMMDD`。
+
+详细规程见 [AGENTS.md](./AGENTS.md) §5.0b。
+
 想推到 GitHub / Gitee 时，先在网页端建一个**空仓库**（不要勾选 README），然后：
 
 ```bash
