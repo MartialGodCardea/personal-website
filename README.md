@@ -45,6 +45,14 @@ python -m http.server 8899
 
 本项目已是 Git 仓库（主分支 `main`），目前只在本机做版本管理，未配置远端。
 
+**从 `website-handoff.zip` 接手的话**：包里不含 `.git`，先初始化一次：
+
+```bash
+git init -b main && git add -A && git commit -m "首次提交：个人网站框架"
+```
+
+日常使用：
+
 ```bash
 git status
 git diff

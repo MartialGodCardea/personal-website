@@ -207,6 +207,16 @@ python tools/build_pages.py
 本项目已初始化为 Git 仓库，主分支 `main`（首次提交 `8fb8d0b`）。**只在本机做版本管理，
 尚未配置任何远端**。
 
+> **从压缩包接手的情况**：`website-handoff.zip` **不包含 `.git` 目录**（这是有意为之，
+> 见下方说明）。解压后请先执行一次初始化：
+>
+> ```bash
+> cd <解压后的目录>
+> git init -b main && git add -A && git commit -m "首次提交：个人网站框架"
+> ```
+>
+> `.gitignore` 与 `.gitattributes` 已在包内，这一步之后仓库配置即正确。
+
 ```bash
 git status           # 看当前改动
 git diff             # 看待提交的具体改动
@@ -216,6 +226,18 @@ git add -A && git commit -m "说明这次改了什么"   # 提交
 
 git checkout .       # 丢弃全部未提交改动（危险，不可逆）
 git revert <hash>    # 撤销某次已提交的改动（安全，会留记录）
+```
+
+**为什么交付包不带 `.git`**：Git 仓库无法靠文件复制可靠搬运。`.git/index` 记录了文件
+的路径、mtime、权限位，换台机器（尤其是跨操作系统）解压后会被判定为"整个工作区被改动"；
+若双方各自提交再合并，还会产生对象冲突。它的价值在于**增量历史**，而历史一旦脱离
+原本地环境就容易失真。对方自行 `git init` 得到的仓库更干净。
+
+若确实需要连同历史一并交接，用 Git 官方格式而非 zip：
+
+```bash
+git bundle create handoff.bundle --all
+# 对方：git clone handoff.bundle my-site
 ```
 
 两个配置文件的用意：
@@ -229,6 +251,16 @@ git revert <hash>    # 撤销某次已提交的改动（安全，会留记录）
 **给 AI agent 的提示**：如果要在本仓库上做较大改动，建议先开新分支
 （`git switch -c 改动名`），改完确认无误再合回 `main`，这样随时可以放弃。
 提交信息请用中文说清"改了什么、为什么"，不要写"update"这类无信息量的词。
+
+> **中文提交信息的编码坑**：Windows Git Bash 下直接 `git commit -m "中文"` 可能因编码
+> 报错。加 `-c i18n.logOutputEncoding=UTF-8` 即可：
+>
+> ```bash
+> git -c i18n.logOutputEncoding=UTF-8 commit -q -m "改动说明"
+> ```
+>
+> 另外建议设置 `git config --global core.quotepath false`，否则中文文件名会显示成
+> 八进制转义（如 `\344\270\252...`）。
 
 ### 5.1 环境
 
