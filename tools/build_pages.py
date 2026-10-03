@@ -46,9 +46,9 @@ def header(page, title, desc):
           {nav}
           <li>
             <ul class="snsnav">
-              <li><a href="../img/wechat-qr.jpg" data-qr title="微信 WeChat">wechat</a></li>
-              <li><a href="#" title="电话 Phone">phone</a></li>
-              <li><a href="mailto:anthonywang171003@gmail.com" title="邮箱 Email">email</a></li>
+              <li><a href="../img/wechat-qr.jpg" data-contact="qr" data-label="微信 · 扫码添加" title="微信 WeChat">wechat</a></li>
+              <li><a href="tel:+8613768692678" data-contact="text" data-label="电话 Phone" data-value="+86 137 6869 2678" title="电话 Phone">phone</a></li>
+              <li><a href="mailto:anthonywang171003@gmail.com" data-contact="text" data-label="邮箱 Email" data-value="anthonywang171003@gmail.com" title="邮箱 Email">email</a></li>
             </ul>
           </li>
         </ul>
@@ -73,10 +73,11 @@ def header(page, title, desc):
 """.format(title=html.escape(title), desc=html.escape(desc), page=page, nav=nav)
 
 
+# 水面横幅。实拍水面照片由 CSS 的 .trip::before 承载，这里只放题款。
+# 2026-10-03 移除了 <canvas class="water"> 与 <div class="water-glow">（涟漪特效下线），
+# 恢复方式见 site/js/main.js 里 waterBand() 的注释。
 TRIP = """
       <div class="trip" id="water-band">
-        <canvas class="water" aria-hidden="true"></canvas>
-        <div class="water-glow" aria-hidden="true"></div>
         <div class="text_area">
           <p class="signature">署名给你和我自由的心</p>
         </div>
@@ -685,7 +686,10 @@ def build_journal_detail():
 def write(rel, content):
     path = os.path.join(SITE, rel.replace("/", os.sep))
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    # newline="\n" 是必需的：Windows 默认会把 "\n" 写成 CRLF，
+    # 与 .gitattributes 的 `eol=lf` 冲突，会让重跑构建后的 16 个页面在
+    # git status 里集体变成 "M"（内容其实没变，只是换行符）。
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(content)
     print("  wrote", rel)
 

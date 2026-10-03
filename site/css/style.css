@@ -388,8 +388,9 @@ footer {
 }
 #main_contents .journal .journal-home-wrap .text-link { grid-column: 1 / 2; }
 #main_contents .journal .text_area {
-  width: 65%;
-  margin-left: 35%;
+  /* 填满所属子列即可。原为 65% + margin-left 35%，那是为更宽的父级校准的，
+     在 subgrid 单列（约 250px）下会把正文挤到约 160px，可读性很差。 */
+  width: 100%;
   position: relative;
 }
 #main_contents .journal .text_area .date {
@@ -401,7 +402,7 @@ footer {
 #main_contents .journal .text_area .excerpt { font-size: 13px; }
 #main_contents .journal .img {
   grid-column: 2 / 3;
-  width: 65%;
+  width: 100%;
 }
 #main_contents .journal .img img { aspect-ratio: 4 / 3; object-fit: cover; }
 
@@ -431,7 +432,7 @@ footer {
 #main_contents .prof .img img { aspect-ratio: 4 / 5; object-fit: cover; }
 #main_contents .prof .prof-home-wrap .text-link { grid-column: 2 / 3; }
 #main_contents .prof p {
-  width: 65%;
+  width: 100%;
   position: relative;
 }
 
@@ -811,6 +812,10 @@ footer {
   background-repeat: no-repeat;
   filter: grayscale(100%);
 }
+/* --- 「水面涟漪特效」样式：2026-10-03 起暂停使用 ---------------------------
+   对应的 <canvas class="water"> 与 <div class="water-glow"> 已从 .trip 中移除，
+   水面区域现在只呈现实拍照片 + 题款。等找到参考实例复刻动效后，把标记加回
+   HTML 并恢复 main.js 里的 waterBand() 调用，这两条规则即可直接复用。 */
 /* 程序生成的水面动画叠在照片之上，soft-light 让它只负责起伏与高光 */
 .trip .water {
   position: relative;
@@ -944,17 +949,10 @@ footer { transition: opacity 0.8s ease-in-out; }
 }
 
 @media screen and (min-width: 835px) {
-  #main_contents .prof .prof-home-wrap,
-  #main_contents .journal .journal-home-wrap {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 6%;
-  }
-  #main_contents .prof .img { width: 38%; margin-left: 0; }
-  #main_contents .prof p { width: 56%; }
-  #main_contents .journal .text_area { width: 56%; margin-left: 0; }
-  #main_contents .journal .img { width: 38%; }
+  /* 桌面端不要用 flex 去覆盖 .journal-home-wrap / .prof-home-wrap 的 grid 布局。
+     subgrid 只在 grid 父容器下生效，一旦父级变成 flex，subgrid 就会失效、
+     子列宽度塌陷成十几像素，正文退化成「一行一个字」，整页被拉得极长。
+     布局交给基础规则的 5 列网格 + subgrid，这里只做箭头定位的微调。 */
   #main_contents .prof p::before,
   #main_contents .journal .text_area::before { left: 0; }
 }
@@ -1139,11 +1137,16 @@ footer { transition: opacity 0.8s ease-in-out; }
   stroke-linecap: round;
 }
 
-/* ---------- 14. QR modal 微信二维码弹窗 ---------------------------------- */
-/* 与 #lightbox 共用一套视觉语言（同色遮罩 + backdrop 模糊），但语义不同：
-   二维码是"工具型"弹层，不做缩放拖拽，且必须保持彩色与锐利 ——
-   灰阶或插值都会影响扫码识别率，所以这里刻意不套 .img 的 grayscale 处理。 */
-#qr-modal {
+/* ---------- 14. Contact modal 联系方式弹窗 ------------------------------ */
+/* 微信二维码 / 电话 / 邮箱共用同一套弹层，由 main.js 按 data-contact 填充。
+   与 #lightbox 共用视觉语言（同色遮罩 + backdrop 模糊），但语义不同：
+   这是"工具型"弹层，不做缩放拖拽。二维码必须保持彩色与锐利 ——
+   灰阶或插值都会影响扫码识别率，所以这里刻意不套 .img 的 grayscale 处理。
+
+   两种形态：
+     [data-contact="qr"]   → 显示 #contact-img（二维码图片）
+     [data-contact="text"] → 显示 #contact-value（号码 / 邮箱）+ 复制按钮 */
+#contact-modal {
   position: fixed;
   inset: 0;
   z-index: 10001;
@@ -1159,16 +1162,18 @@ footer { transition: opacity 0.8s ease-in-out; }
   /* 关闭时等淡出播完再隐藏，否则过渡会被中断 */
   transition: opacity 0.28s ease, visibility 0s linear 0.28s;
 }
-#qr-modal.is-open {
+#contact-modal.is-open {
   opacity: 1;
   visibility: visible;
   transition: opacity 0.28s ease, visibility 0s;
 }
 html.has-modal { overflow: hidden; }
 
-#qr-card {
+#contact-card {
   position: relative;
-  padding: 22px 22px 16px;
+  padding: 24px 22px 20px;
+  min-width: 200px;
+  max-width: min(90vw, 400px);
   background: #ffffff;
   border-radius: 4px;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3);
@@ -1176,23 +1181,60 @@ html.has-modal { overflow: hidden; }
   transform: translateY(10px) scale(0.98);
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
-#qr-modal.is-open #qr-card { transform: translateY(0) scale(1); }
+#contact-modal.is-open #contact-card { transform: translateY(0) scale(1); }
 
-#qr-img {
+#contact-img {
   display: block;
   width: min(62vw, 296px);
   height: auto;
   image-rendering: auto;
 }
-#qr-caption {
-  margin: 12px 0 0;
+#contact-img[hidden] { display: none; }
+
+/* 小字标签：二维码下作说明，文本模式里作标题 */
+#contact-label {
+  margin: 0;
   font-family: var(--font-cjk);
   font-size: 12px;
   letter-spacing: 0.18em;
   padding-left: 0.18em;
   color: #6b6b6b;
 }
-#qr-close {
+#contact-img:not([hidden]) + #contact-label { margin-top: 12px; }
+
+/* 文本模式的主信息：号码 / 邮箱。
+   字号上限 18px 是为了让 28 字符的邮箱地址在桌面端正好单行放下 ——
+   换行会断在 "gmail." 后面，观感很差。 */
+#contact-value {
+  margin: 14px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(15px, 1.3vw, 18px);
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: #111;
+  hyphens: none;
+  word-break: break-word;
+}
+#contact-value[hidden] { display: none; }
+
+#contact-copy {
+  margin-top: 16px;
+  padding: 7px 20px 7px calc(20px + 0.16em);
+  font-family: var(--font-cjk);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: #111;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+#contact-copy:hover { background: #111; color: #ffffff; border-color: #111; }
+#contact-copy:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#contact-copy[hidden] { display: none; }
+#contact-copy.is-done { background: #111; color: #ffffff; border-color: #111; }
+#contact-close {
   position: absolute;
   top: -13px;
   right: -13px;
@@ -1209,9 +1251,9 @@ html.has-modal { overflow: hidden; }
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
   transition: transform 0.2s ease;
 }
-#qr-close:hover { transform: scale(1.1); }
-#qr-close:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
-#qr-close svg {
+#contact-close:hover { transform: scale(1.1); }
+#contact-close:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#contact-close svg {
   width: 15px;
   height: 15px;
   stroke: #111;
@@ -1220,5 +1262,5 @@ html.has-modal { overflow: hidden; }
   stroke-linecap: round;
 }
 @media (max-width: 500px) {
-  #qr-img { width: min(74vw, 260px); }
+  #contact-img { width: min(74vw, 260px); }
 }

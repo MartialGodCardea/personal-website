@@ -96,11 +96,18 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Water band — 常驻水面 + 跟随光标的涟漪
+   * 5. Water band — 常驻水面 + 跟随光标的涟漪 【当前状态：已下线】
    *
    * 高度场（两张 Float32 缓冲交替推进的波动方程）+ 逐像素位移着色。
    * 模拟网格远小于 CSS 像素（约 1/4），再由浏览器放大，既轻又柔。
    * 页面不在视口内时停机；prefers-reduced-motion 时只画一帧静水。
+   *
+   * 2026-10-03 起暂时下线：程序生成的水面叠在实拍照片上观感不佳。
+   * 恢复步骤（缺一不可）：
+   *   1) 把 <canvas class="water"> 与 <div class="water-glow"> 加回 .trip；
+   *   2) 打开 boot() 里被注释掉的 waterBand() 调用；
+   *   3) 把 "#water-band canvas.water" 加回 initLightbox() 的 bindImages() 选择器。
+   * 对应的 CSS（.trip .water / .trip .water-glow）已保留，无需改动。
    * ------------------------------------------------------------------ */
   function waterBand() {
     var host = $("#water-band");
@@ -420,8 +427,7 @@
       var selector = [
         "#main_contents .img img",
         "#main_contents figure img",
-        ".plate img",
-        "#water-band canvas.water"
+        ".plate img"
       ].join(",");
       $$(selector).forEach(function (el) {
         if (el.__lbound) return;
@@ -516,43 +522,113 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 9. WeChat QR modal — 二维码遮罩弹窗
-   *    拦截 SNS 导航里的 a[data-qr]，改为在当前页弹出遮罩层展示二维码，
-   *    背景用 backdrop-filter 做轻微高斯模糊。图片地址直接取自 href，
-   *    因此各层级页面（img/ 与 ../img/）都无需额外配置。
-   *    无 JS 时 href 仍然有效，会自动退回原来的新窗口打开。
+   * 9. Contact modal — 联系方式遮罩弹窗（微信 / 电话 / 邮箱）
+   *    拦截 SNS 导航里的 a[data-contact]，改为在当前页弹出遮罩层，
+   *    背景用 backdrop-filter 做轻微高斯模糊。两种形态由 data-contact 决定：
+   *      data-contact="qr"   → 展示 href 指向的图片（微信二维码）
+   *      data-contact="text" → 展示 data-value（电话 / 邮箱）+ 复制按钮
+   *    href 保留 tel: / mailto: / 图片地址，因此无 JS 时会退回原生行为。
    * ------------------------------------------------------------------ */
-  function initQrModal() {
-    var trigger = $("a[data-qr]");
-    if (!trigger) return;
-    if ($("#qr-modal")) return;
+  function initContactModal() {
+    var triggers = $$("a[data-contact]");
+    if (!triggers.length) return;
+    if ($("#contact-modal")) return;
 
     var overlay = document.createElement("div");
-    overlay.id = "qr-modal";
+    overlay.id = "contact-modal";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "微信二维码");
+    overlay.setAttribute("aria-labelledby", "contact-label");
     overlay.innerHTML =
-      '<div id="qr-card">' +
-        '<button id="qr-close" type="button" aria-label="关闭">' +
+      '<div id="contact-card">' +
+        '<button id="contact-close" type="button" aria-label="关闭">' +
           '<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/>' +
           '<line x1="18" y1="6" x2="6" y2="18"/></svg>' +
         '</button>' +
-        '<img id="qr-img" alt="微信二维码，扫码添加">' +
-        '<p id="qr-caption">微信 · 扫码添加</p>' +
+        '<img id="contact-img" alt="" hidden>' +
+        '<p id="contact-label"></p>' +
+        '<p id="contact-value" hidden></p>' +
+        '<button id="contact-copy" type="button" hidden>复制</button>' +
       '</div>';
     document.body.appendChild(overlay);
 
-    var img = $("#qr-img", overlay);
-    var closeBtn = $("#qr-close", overlay);
+    var img = $("#contact-img", overlay);
+    var label = $("#contact-label", overlay);
+    var value = $("#contact-value", overlay);
+    var copyBtn = $("#contact-copy", overlay);
+    var closeBtn = $("#contact-close", overlay);
     var lastFocus = null;
     var opened = false;
+    var copyTimer = 0;
 
-    function open(src) {
+    /* 复制：优先异步剪贴板 API（需要 https / localhost），
+       失败或不可用时退回临时 textarea + execCommand，
+       这样在本机 http:// 预览时也能正常复制。 */
+    function copied() {
+      copyBtn.textContent = "已复制";
+      copyBtn.classList.add("is-done");
+      if (copyTimer) window.clearTimeout(copyTimer);
+      copyTimer = window.setTimeout(resetCopy, 1600);
+    }
+    function resetCopy() {
+      copyTimer = 0;
+      copyBtn.textContent = "复制";
+      copyBtn.classList.remove("is-done");
+    }
+    function legacyCopy(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) copied();
+    }
+    function copy(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(copied, function () {
+          legacyCopy(text);
+        });
+      } else {
+        legacyCopy(text);
+      }
+    }
+
+    function open(trigger) {
       if (opened) return;
       opened = true;
       lastFocus = document.activeElement;
-      img.src = src;
+
+      var href = trigger.getAttribute("href") || "";
+      var text = trigger.getAttribute("data-value") || "";
+      var isQr = trigger.getAttribute("data-contact") === "qr" &&
+        href && href.charAt(0) !== "#";
+
+      label.textContent = trigger.getAttribute("data-label") || "";
+
+      if (isQr) {
+        img.src = href;
+        img.alt = label.textContent || "二维码";
+        img.hidden = false;
+        value.hidden = true;
+        value.textContent = "";
+        copyBtn.hidden = true;
+      } else {
+        /* 文本模式：清掉图片地址，避免残留请求 */
+        img.hidden = true;
+        img.removeAttribute("src");
+        img.alt = "";
+        value.textContent = text;
+        value.hidden = !text;
+        copyBtn.hidden = !text;
+        resetCopy();
+      }
+
       overlay.classList.add("is-open");
       root.classList.add("has-modal");
       closeBtn.focus();
@@ -563,15 +639,18 @@
       opened = false;
       overlay.classList.remove("is-open");
       root.classList.remove("has-modal");
+      if (copyTimer) { window.clearTimeout(copyTimer); copyTimer = 0; }
+      resetCopy();
       /* 焦点还给触发按钮，键盘用户不会丢失位置 */
       if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
 
-    trigger.addEventListener("click", function (e) {
-      var src = trigger.getAttribute("href");
-      if (!src) return;                 /* 没有地址时保留默认跳转 */
-      e.preventDefault();
-      open(src);
+    triggers.forEach(function (trigger) {
+      trigger.addEventListener("click", function (e) {
+        /* 只要标了 data-contact 就接管点击；href 仅作无 JS 兜底 */
+        e.preventDefault();
+        open(trigger);
+      });
     });
 
     overlay.addEventListener("click", function (e) {
@@ -580,6 +659,10 @@
     closeBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       close();
+    });
+    copyBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      copy(value.textContent || "");
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && opened) close();
@@ -661,12 +744,13 @@
   function boot() {
     renderDate();
     markNavigation();
-    waterBand();
+    /* 水面涟漪特效已下线（2026-10-03）。恢复步骤见上方 waterBand() 的注释。 */
+    // waterBand();
     startRotators();
     observePlates();
     initLightbox();
     initRippleText();
-    initQrModal();
+    initContactModal();
 
     if (root.classList.contains("is-loading")) {
       opening();

@@ -34,6 +34,12 @@
 所有内容都通过 `grid-column: N / M` 定位到这 5 列上。**不要引入 flex 或百分比宽度去替代它。**
 嵌套元素用 `grid-template-columns: subgrid` 继承列对齐——这是让标题、正文、图片精确对齐的关键。
 
+> ⚠️ **踩过的坑（2026-10-03）**：`@media (min-width: 835px)` 里曾用 `display: flex`
+> 覆盖 `.journal-home-wrap` / `.prof-home-wrap`。`subgrid` **只在父级是 grid 时生效**，
+> 父级一变 flex 就静默失效，子列塌陷到十几像素——首页正文退化成「一行一个字」，
+> 整页被拉长到一万多像素。
+> 结论：**桌面端也不要拿 flex 去覆盖这两处的 grid**，那里只需要定位微调。
+
 ### 2.2 固定浮层靠 `mix-blend-mode: difference` 反相
 
 logo、日期、导航、巨型名牌、页脚全部是 `position: fixed` + 近白色 `--ghost: #fafafa` +
@@ -76,7 +82,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 ├── README.md                 # 给人看的简短指引
 ├── site/                     # ★ 交付物：整个网站，可直接部署
 │   ├── index.html            # 首页（四段式：design / journal / notes / prof）
-│   ├── css/style.css         # ★ 全部样式，1224 行，15 个分节
+│   ├── css/style.css         # ★ 全部样式，1266 行，15 个分节
 │   ├── js/main.js            # 全部交互，9 个职责 + boot（见 §4.4）
 │   ├── fonts/                # 3 个自托管 woff2
 │   ├── img/                  # 15 张 JPG（13 张占位图 + water-bg.jpg + wechat-qr.jpg）+ 4 个 SVG
@@ -106,11 +112,11 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 | 8 | Inner pages（索引列表） |
 | 8b | Article detail（文章详情） |
 | 9 | Profile page |
-| 10 | Water band（实拍水面背景 + 动态波纹 + 涟漪字体） |
+| 10 | Water band（实拍水面照片 + 署名；**涟漪特效已下线**，见 §4.6） |
 | 11 | Opening animation |
 | 12 | Responsive |
 | 13 | Image Lightbox（图片预览浮层） |
-| 14 | QR modal（微信二维码弹窗） |
+| 14 | Contact modal（联系方式弹窗：微信 / 电话 / 邮箱） |
 
 ---
 
@@ -183,12 +189,12 @@ python tools/build_pages.py
 |---|---|
 | `renderDate()` | 右上角竖排日期，实时生成 |
 | `markNavigation()` | 读 `body[data-page]`，给对应导航项加 `.active`（首页不高亮） |
-| `waterBand()` | 动态水面：高度场波动 + 跟随光标的涟漪（见 §4.6） |
+| ~~`waterBand()`~~ | 动态水面涟漪。**已下线**（`boot()` 里被注释掉），见 §4.6 |
 | `startRotators()` | 读 `[data-images]` JSON，定时交叉淡入换图 |
 | `observePlates()` | `IntersectionObserver` 给 `#main_contents .img` 加 `.is-active`（触发显色） |
 | `initLightbox()` | 图片灯箱：0.5–3x 缩放 / 拖拽 / 滚轮 / ESC（见 §4.7） |
-| `initRippleText()` | 水面署名文字逐字随动画帧起伏 |
-| `initQrModal()` | 微信二维码遮罩弹窗，背景高斯模糊（见 §4.7） |
+| `initRippleText()` | 水面署名文字逐字随动画帧起伏（幅度 ≤ 字高 5%，几乎不可见） |
+| `initContactModal()` | 联系方式遮罩弹窗：微信二维码 / 电话 / 邮箱，背景高斯模糊（见 §4.7） |
 | `opening()` | 首屏字母闪烁 + 导航逐项入场，`sessionStorage.hasVisited` 保证只播一次 |
 
 > **新增页面时必须设置 `<body data-page="...">`**，取值与 `NAV` 里的 key 一致
@@ -207,37 +213,47 @@ python tools/build_pages.py
 另有 `water-bg.jpg`（水面横幅底图）与 `wechat-qr.jpg`（微信二维码）是**真实素材**，
 不是占位图，分别见 §4.6 与 §4.7。换图时同名替换即可。
 
-### 4.6 动态水面（原「旅行带」）
+### 4.6 水面横幅（原「旅行带」）
 
-页面底部那条 100vh 的横幅（`#water-band`）＝ **实拍水面照片 ＋ 程序生成波纹** 两层叠加。
+页面底部那条 100vh 的横幅（`#water-band`）＝ **实拍水面照片 ＋ 署名题款**。
 
 **底层是实拍照片**，由 CSS 分节 10 的 `.trip::before` 承载（`site/img/water-bg.jpg`），
 并以 `filter: grayscale(100%)` 现算灰调。用伪元素承载而非直接给 `.trip` 设
-`background`，是为了让灰调**只作用于照片本身**，不波及上层 canvas 与署名文字；
-想恢复彩色只需删掉那一行 `filter`。
+`background`，是为了让灰调**只作用于照片本身**，不波及署名文字；想恢复彩色只需删掉
+那一行 `filter`。
 
 > 素材来源：Wikimedia Commons 的 *Ripples on a mountain lake (Unsplash).jpg*，
 > **CC0 1.0 公有领域奉献**（作者 Braxton Stuntz），可自由商用、无需署名。
 > 处理：裁取涟漪区域 → 缩至 2400×1388 → JPEG q78（约 438 KB）。
 > 原图 12.2 MB / 5769×3836，如需重新裁切请从 Commons 重新下载。
+>
+> ⚠️ 这张照片**自带明显的同心涟漪**（雨点打在水面上）。如果哪天觉得"底部水圈太抢眼"，
+> 那是照片内容，不是特效——换一张平静水面的照片（同名替换 `water-bg.jpg`）即可。
 
-**上层是程序生成的波纹**，由 `js/main.js` 的 `waterBand()` 驱动：
+**上层原本的程序波纹：2026-10-03 起已下线。**
 
-- 两张 `Float32Array` 高度场交替推进波动方程，逐像素做位移采样 + 波峰高光；
-- 模拟网格远小于 CSS 像素（约 1/3，且像素数封顶 12 万），再由浏览器放大，
-  既轻又柔；`ResizeObserver` 跟随尺寸变化；
-- 鼠标划过注入涟漪（按速度决定强度）、按下是一记更大的落水；另有约 1.2–2.9 秒
-  一次的随机环境滴落，避免"死水"；悬停时 `.water-glow` 渐亮，像水面接光；
-- 离屏时 `IntersectionObserver` 停机；`prefers-reduced-motion: reduce` 时只画一帧静水。
+用户反馈程序生成的水面叠在实拍照片上观感不佳，故暂时撤下，等找到参考实例复刻后再补。
+代码与样式都**保留但断开**，恢复只需三步（缺一不可）：
 
-调参集中在 `waterBand()` 顶部：`DAMP`（衰减）、`SLOPE`（位移强度）、`SPEC`（高光）。
-`paintTexture()` 负责水体底纹（深度渐变 + 水平拉伸的焦散细纹）。
+1. 把 `<canvas class="water" aria-hidden="true"></canvas>` 与
+   `<div class="water-glow" aria-hidden="true"></div>` 加回 `.trip` 内。
+   ——共 19 个 HTML。其中 `notes/` 与 `journal/` 的 16 页由 `tools/build_pages.py`
+   的 `TRIP` 常量生成，**改完必须重跑脚本**，否则会被覆盖（见 §4.1）；
+2. 打开 `js/main.js` 里 `boot()` 中被注释掉的 `waterBand();`；
+3. 把 `"#water-band canvas.water"` 加回 `initLightbox()` 的 `bindImages()` 选择器
+   （点水面 canvas 会导出 PNG 快照放大）。
+
+原理备查：两张 `Float32Array` 高度场交替推进波动方程，逐像素做位移采样 + 波峰高光；
+模拟网格约为 CSS 像素的 1/3 且像素数封顶 12 万，再由浏览器放大，既轻又柔；鼠标划过
+注入涟漪（按速度决定强度）、按下是一记更大的落水，另有约 1.2–2.9 秒一次的随机环境
+滴落；离屏时 `IntersectionObserver` 停机，`prefers-reduced-motion: reduce` 时只画一帧
+静水。调参集中在 `waterBand()` 顶部：`DAMP`（衰减）、`SLOPE`（位移强度）、`SPEC`（高光）。
 
 > `trip-01..03.jpg` 与 `data-trips` / 随机换图逻辑已随本次改版**退出使用**，
 > 图片文件保留备用；要恢复照片横幅就把 `TRIP` 模板换回 `<div class="img">` 并
 > 恢复 `pickTrip()`（见 git 历史）。
 
-### 4.7 两个浮层：图片灯箱与微信二维码弹窗
+### 4.7 两个浮层：图片灯箱与联系方式弹窗
 
 两者都是 `position: fixed` 遮罩 + `backdrop-filter` 模糊，但**刻意分开实现**，
 因为语义不同、交互诉求也不同。
@@ -247,19 +263,33 @@ python tools/build_pages.py
 - JS 自建 DOM（所以在 HTML 里搜不到 `#lightbox`，这是正常的）。
   支持 0.5–3x 缩放、拖拽平移、滚轮缩放、ESC / 点遮罩 / 关闭按钮退出。
 - 绑定选择器写死在 `bindImages()` 里：
-  `#main_contents .img img`、`#main_contents figure img`、`.plate img`、
-  `#water-band canvas.water`（点水面 canvas 会导出 PNG 快照放大）。
+  `#main_contents .img img`、`#main_contents figure img`、`.plate img`。
   **新增图片容器时要把选择器补进去，否则新图点了没反应。**
+  （原第 4 条 `#water-band canvas.water` 已随涟漪特效下线一并移除，见 §4.6。）
 - 动态插入的图片需要重绑，调用 `window.__rebindLightbox()`。
 
-**微信二维码弹窗**（`initQrModal()` / CSS 分节 14）——工具型弹层：
+**联系方式弹窗**（`initContactModal()` / CSS 分节 14）——工具型弹层，三种联系方式共用：
 
-- 触发：SNS 导航里的 `<a data-qr href="img/wechat-qr.jpg">`。JS 拦截点击并弹出遮罩层，
-  **图片地址直接取自 `href`**，所以根目录（`img/`）与子目录（`../img/`）都无需额外配置。
-- 无 JS 时 `href` 仍然有效，会自动退回原来的新窗口打开——这是有意的降级路径。
+- 触发：SNS 导航里带 `data-contact` 的 `<a>`。JS 拦截点击、弹出遮罩层，**不跳转**。
+  两种形态由属性值决定：
+
+  | 形态 | 触发写法 | 弹窗内容 |
+  |---|---|---|
+  | `qr` | `<a href="img/wechat-qr.jpg" data-contact="qr" data-label="微信 · 扫码添加">` | `href` 指向的图片 |
+  | `text` | `<a href="tel:+8613768692678" data-contact="text" data-label="电话 Phone" data-value="+86 137 6869 2678">` | `data-value` 文本 + 复制按钮 |
+
+  图片取自 `href`、文本取自 `data-value`，所以根目录（`img/`）与子目录（`../img/`）
+  都无需额外配置。
+- **无 JS 时 `href` 仍然有效**（`tel:` / `mailto:` / 图片地址），会退回原生行为——
+  这是有意的降级路径。改这些链接时**不要**把 `href` 删成 `#`。
+- 复制按钮优先用 `navigator.clipboard`，失败退回 `textarea + execCommand`，
+  因此本机 `http://` 预览也能复制；成功后按钮显示「已复制」1.6 秒。
 - 背景模糊 `backdrop-filter: blur(7px)`；打开时给 `<html>` 加 `.has-modal` 锁住滚动；
   关闭后焦点归还触发按钮（键盘用户不丢位置）。
-- 刻意**不做缩放**、也**不套灰调**：二维码必须保持彩色与锐利，灰阶或插值都会
+- 卡片宽度 `min(90vw, 400px)`、文本字号上限 18px，是为了让 28 字符的邮箱
+  `anthonywang171003@gmail.com` 在桌面端**正好单行放下**（换行会断在 `gmail.`
+  后面，观感很差）。**改字号或内边距前先量一下邮箱宽度。**
+- 二维码形态刻意**不做缩放**、也**不套灰调**：必须保持彩色与锐利，灰阶或插值都会
   影响扫码识别率。这与 `.img` 的 grayscale 规范是有意区分的，**不要"统一"掉**。
 
 ---
@@ -453,6 +483,29 @@ python tools/screenshot.py index.html 0 out.png 390 1900 frame compact  # 移动
 另外 `site/index.html` 里有一段 5 秒兜底 `setTimeout`，防止动效失败时页面永久隐藏——
 **不要删掉它。**
 
+### 6.2b 截图不要依赖滚动：`scroll-behavior: smooth` + virtual-time 不推进
+
+`html { scroll-behavior: smooth }`（§2 base）会让 `window.scrollTo()` / `scrollIntoView()`
+变成**动画**，而这个动画在 Chrome `--virtual-time-budget` 下不推进，结果是截图永远停在
+第 0 屏——若此刻内容还在开场淡入（`html.is-loading` 把 `#main_contents` 设为
+`opacity: 0`），拍出来就是一张纯白图。
+
+要截某个滚动位置，注入脚本里必须先关掉平滑滚动、并强制结束开场隐藏态：
+
+```js
+document.documentElement.style.scrollBehavior = 'auto';
+document.documentElement.classList.remove('is-loading');
+['h1.id', '.todays_date', '.name_ja', 'footer', '#main_contents']
+  .forEach(function (s) { var e = document.querySelector(s); if (e) e.classList.add('is-visible'); });
+window.scrollTo(0, y);
+```
+
+但**滚动后再截图在本机仍不可靠**（合成帧不跟随滚动）。最稳的办法是干脆不滚动：
+用 `compact` + 超高视口（如 `1440x3900`）一次拍下整页，再按坐标裁切。
+
+`scrollIntoView()` 尤其别用：`#wrapper` 带 `overflow: hidden`，会被它当成祖先滚动容器
+从内部滚走，结果同样是白屏。
+
 ### 6.3 目录式链接在 `file://` 下失效
 
 全站已统一为显式 `index.html`（例如 `profile/index.html` 而非 `profile/`）。
@@ -485,11 +538,16 @@ SITE = os.path.join(ROOT, "site")
 - [ ] **`site/img/` 下 13 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
       让"悬停显色"有效果可看。`water-bg.jpg` 与 `wechat-qr.jpg` 是真实素材，
       `trip-01..03.jpg` 已停用（见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
-- [ ] **右上角 SNS 导航 3 项，其中 1 项仍是占位**（在各页 `<ul class="snsnav">` 内，
-      共 19 个 HTML 文件，改 `tools/build_pages.py` 的 `header()` 后重新生成）：
-      `wechat` → `img/wechat-qr.jpg`（**已接遮罩弹窗**，见 §4.7）、
-      `phone` → `href="#"`（⚠️ 仍是空链接，待填真实号码）、
-      `email` → `mailto:anthonywang171003@gmail.com`（**已填真实地址**）。
+- [x] **右上角 SNS 导航 3 项均已接通**（在各页 `<ul class="snsnav">` 内，共 19 个 HTML
+      文件；`notes/` 与 `journal/` 的 16 页改 `tools/build_pages.py` 的 `header()`
+      后重新生成）：
+      `wechat` → `img/wechat-qr.jpg`、`phone` → `tel:+8613768692678`、
+      `email` → `mailto:anthonywang171003@gmail.com`。
+      三项都走同一个遮罩弹窗，点击**不跳转**（见 §4.7）。
+- [ ] **水面涟漪特效处于下线状态**，等用户找到参考实例后照着复刻（见 §4.6）。
+      代码与样式都还在，恢复是三步操作。
+- [ ] `initRippleText()`（署名逐字浮动）仍启用，但幅度上限只有字高的 5%（约 1px），
+      肉眼几乎不可见。若认为它是"死代码"可一并移除，或调大 `AMP` 让它真正起作用。
 - [ ] `NOTES` 数据里的 `img` 字段未被使用，可清理（见 §4.1）。
 - [ ] `tools/make_water_bg.py` 生成的是**旧的程序化水底图**；`water-bg.jpg` 已换成
       实拍照片，该脚本不再是该素材的来源，保留仅供回溯。

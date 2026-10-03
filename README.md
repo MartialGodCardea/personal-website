@@ -19,8 +19,8 @@ python -m http.server 8899
 | 路径 | 说明 |
 |---|---|
 | `site/` | **交付物**。整个网站，可直接部署到任意静态托管 |
-| `site/css/style.css` | 全部样式（1006 行，13 个分节） |
-| `site/js/main.js` | 全部交互（6 个职责） |
+| `site/css/style.css` | 全部样式（1266 行，15 个分节） |
+| `site/js/main.js` | 全部交互（9 个职责） |
 | `tools/` | 构建与校验脚本，不参与部署 |
 
 ## 页面
@@ -34,8 +34,18 @@ python -m http.server 8899
 - **加文章** → 编辑 `tools/build_pages.py` 的 `NOTES` / `JOURNAL` 列表，然后
   `python tools/build_pages.py`
   （`notes/index.html` 是自动生成的，手改会被覆盖）
-- **换照片** → 覆盖 `site/img/` 下的同名文件，**当前 12 张是占位图**
-  （`wechat-qr.jpg` 是真实微信二维码；`trip-01..03.jpg` 已随动态水面改版停用）
+- **换照片** → 覆盖 `site/img/` 下的同名文件，**其中 13 张是占位图**
+  （`water-bg.jpg` 水面底图与 `wechat-qr.jpg` 微信二维码是真实素材；
+  `trip-01..03.jpg` 已停用）
+
+## 联系方式按钮
+
+右上角 `wechat` / `phone` / `email` 三项点击后都在**当前页弹出遮罩弹窗**，不跳转：
+微信显示二维码，电话显示 `+86 137 6869 2678`，邮箱显示 `anthonywang171003@gmail.com`，
+后两者带「复制」按钮。弹窗背景有轻微高斯模糊。
+
+> 底部水面的**动态涟漪特效目前已下线**（观感待优化，等找到参考实例再复刻）。
+> 现在那里是一张实拍的灰调水面照片 + 题款。恢复方法见 AGENTS.md §4.6。
 
 ## 交接给 AI agent
 
