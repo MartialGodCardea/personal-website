@@ -300,6 +300,222 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 7. Image lightbox — 全屏预览 + 滚轮缩放 + 拖拽平移 + 边界限制
+   * ------------------------------------------------------------------ */
+  function initLightbox() {
+    if ($("#lightbox")) return;
+
+    var overlay = document.createElement("div");
+    overlay.id = "lightbox";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "图片预览");
+    overlay.innerHTML =
+      '<div id="lightbox-close" aria-label="关闭预览">' +
+        '<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/>' +
+        '<line x1="18" y1="6" x2="6" y2="18"/></svg></div>' +
+      '<div id="lightbox-stage"><img id="lightbox-img" alt="预览"></div>';
+    document.body.appendChild(overlay);
+
+    var stage = $("#lightbox-stage", overlay);
+    var img = $("#lightbox-img", overlay);
+    var closeBtn = $("#lightbox-close", overlay);
+
+    var MIN = 0.5, MAX = 3;
+    var scale = 1, tx = 0, ty = 0;
+    var dragging = false, sx = 0, sy = 0, sTx = 0, sTy = 0;
+    var baseW = 0, baseH = 0, opened = false;
+
+    function apply() {
+      img.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
+    }
+    function reset() {
+      scale = 1; tx = 0; ty = 0;
+      apply();
+    }
+    function clampPan() {
+      if (scale <= 1) { tx = 0; ty = 0; return; }
+      var extraX = (baseW * (scale - 1)) / 2;
+      var extraY = (baseH * (scale - 1)) / 2;
+      if (Math.abs(tx) > extraX) tx = tx > 0 ? extraX : -extraX;
+      if (Math.abs(ty) > extraY) ty = ty > 0 ? extraY : -extraY;
+    }
+
+    function open(src) {
+      reset();
+      img.src = src;
+      opened = false;
+      overlay.classList.add("is-animating");
+      requestAnimationFrame(function () {
+        overlay.classList.add("is-open");
+        overlay.classList.remove("is-animating");
+      });
+      document.body.style.overflow = "hidden";
+      opened = true;
+    }
+
+    function close() {
+      if (!opened) return;
+      opened = false;
+      overlay.classList.remove("is-open");
+      overlay.classList.add("is-animating");
+      setTimeout(function () {
+        overlay.classList.remove("is-animating");
+        img.removeAttribute("src");
+        document.body.style.overflow = "";
+      }, 300);
+    }
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay || e.target === stage) close();
+    });
+    closeBtn.addEventListener("click", function (e) { e.stopPropagation(); close(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlay.classList.contains("is-open")) close();
+    });
+
+    img.addEventListener("load", function () {
+      baseW = img.clientWidth;
+      baseH = img.clientHeight;
+    });
+
+    overlay.addEventListener("wheel", function (e) {
+      if (!overlay.classList.contains("is-open")) return;
+      e.preventDefault();
+      var delta = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      var next = Math.min(MAX, Math.max(MIN, scale * delta));
+      if (Math.abs(next - 1) < 0.02) next = 1;
+      scale = next;
+      clampPan();
+      apply();
+    }, { passive: false });
+
+    function pointerDown(e) {
+      if (!overlay.classList.contains("is-open")) return;
+      if (scale <= 1) return;
+      dragging = true;
+      stage.classList.add("is-dragging");
+      sx = e.clientX; sy = e.clientY;
+      sTx = tx; sTy = ty;
+      try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    function pointerMove(e) {
+      if (!dragging) return;
+      tx = sTx + (e.clientX - sx);
+      ty = sTy + (e.clientY - sy);
+      clampPan();
+      apply();
+    }
+    function pointerUp(e) {
+      dragging = false;
+      stage.classList.remove("is-dragging");
+      try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+    stage.addEventListener("pointerdown", pointerDown);
+    stage.addEventListener("pointermove", pointerMove);
+    stage.addEventListener("pointerup", pointerUp);
+    stage.addEventListener("pointercancel", pointerUp);
+
+    function bindImages() {
+      var selector = [
+        "#main_contents .img img",
+        "#main_contents figure img",
+        ".plate img",
+        "#water-band canvas.water"
+      ].join(",");
+      $$(selector).forEach(function (el) {
+        if (el.__lbound) return;
+        el.__lbound = true;
+        el.style.cursor = "zoom-in";
+        el.addEventListener("click", function (e) {
+          var src;
+          if (el.tagName && el.tagName === "CANVAS") {
+            try { src = el.toDataURL("image/png"); } catch (_) { return; }
+          } else {
+            src = el.currentSrc || el.src;
+          }
+          if (!src) return;
+          e.preventDefault();
+          e.stopPropagation();
+          open(src);
+        });
+      });
+    }
+
+    bindImages();
+    window.__rebindLightbox = bindImages;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 8. Ripple text — 水面区域文字逐字涟漪，与水面动画帧同步
+   *    幅度 ≤ 字体自身高度 5%，GPU 加速，低性能设备降级静态
+   * ------------------------------------------------------------------ */
+  function initRippleText() {
+    var sig = $(".trip .signature");
+    if (!sig) return;
+
+    var calm = !!(window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var poorPerf = !("requestAnimationFrame" in window);
+    if (calm || poorPerf) return;
+
+    var text = sig.textContent || "";
+    sig.textContent = "";
+    var chars = [];
+    for (var i = 0; i < text.length; i++) {
+      var s = document.createElement("span");
+      s.className = "ripple-char";
+      s.textContent = text.charAt(i) === " " ? "\u00A0" : text.charAt(i);
+      sig.appendChild(s);
+      chars.push(s);
+    }
+    if (!chars.length) return;
+
+    function sampleFontHeight() {
+      var t = chars[0];
+      var h = t.offsetHeight || 24;
+      return Math.max(4, h);
+    }
+
+    var fontH = sampleFontHeight();
+    var AMP = fontH * 0.05;     /* 严格控制在字高 5% 以内 */
+    var WAVE_PERIOD = 2.4;      /* 秒，与水面随机滴落平均周期一致 */
+
+    var rafId = 0, visible = true, start = performance.now();
+
+    function frame(now) {
+      rafId = 0;
+      if (!visible) return;
+      var t = (now - start) / 1000;
+      for (var i = 0; i < chars.length; i++) {
+        var phase = i * 0.55;
+        var dy = Math.sin((t / WAVE_PERIOD) * Math.PI * 2 + phase) * AMP;
+        var dx = Math.sin((t / (WAVE_PERIOD * 0.72)) * Math.PI * 2 + phase * 1.3) * AMP * 0.35;
+        chars[i].style.transform = "translate3d(" +
+          dx.toFixed(3) + "px," + dy.toFixed(3) + "px,0)";
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function start() { if (rafId) return; rafId = requestAnimationFrame(frame); }
+    function stop() { if (rafId) cancelAnimationFrame(rafId); rafId = 0; }
+
+    window.addEventListener("resize", function () {
+      fontH = sampleFontHeight();
+      AMP = fontH * 0.05;
+    });
+
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { visible = en.isIntersecting; });
+        visible ? start() : stop();
+      }, { rootMargin: "120px 0px" }).observe(sig);
+    } else {
+      start();
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
    * 6. Opening sequence — letters flicker, nav staggers, page settles
    * ------------------------------------------------------------------ */
   function opening() {
@@ -377,6 +593,8 @@
     waterBand();
     startRotators();
     observePlates();
+    initLightbox();
+    initRippleText();
 
     if (root.classList.contains("is-loading")) {
       opening();

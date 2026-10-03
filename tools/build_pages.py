@@ -612,15 +612,17 @@ def build_journal_index():
     for j in JOURNAL:
         items.append(
             """            <div class="item">
-              <a href="{slug}.html">
-                <div class="text_area">
-                  <span class="date">{date}</span>
-                  <p class="excerpt">{excerpt}</p>
-                </div>
+              <div class="journal-wrap">
+                <a class="text-link" href="{slug}.html">
+                  <div class="text_area">
+                    <span class="date">{date}</span>
+                    <p class="excerpt">{excerpt}</p>
+                  </div>
+                </a>
                 <div class="img">
                   <img src="../img/{img}" alt="{title}">
                 </div>
-              </a>
+              </div>
             </div>""".format(
                 slug=j["slug"], date=j["date"], img=j["img"],
                 excerpt=html.escape(j["excerpt"]), title=html.escape(j["title"]),

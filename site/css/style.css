@@ -369,20 +369,25 @@ footer {
 }
 
 /* ---------- 7. Home page sections --------------------------------------- */
-#main_contents .design a {
+#main_contents .design .img {
   display: block;
   grid-column: span 3;
   position: relative;
 }
-#main_contents .design a img {
+#main_contents .design .img img {
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
 }
 
-#main_contents .journal a { grid-column: span 2; }
+#main_contents .journal .journal-home-wrap {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: var(--gap);
+}
+#main_contents .journal .journal-home-wrap .text-link { grid-column: 1 / 2; }
 #main_contents .journal .text_area {
-  grid-column: 1 / 2;
   width: 65%;
   margin-left: 35%;
   position: relative;
@@ -400,24 +405,33 @@ footer {
 }
 #main_contents .journal .img img { aspect-ratio: 4 / 3; object-fit: cover; }
 
-#main_contents .notes a {
+#main_contents .notes .text-link {
   grid-column: 3 / 4;
   position: relative;
+  display: block;
 }
 #main_contents .notes p { width: 100%; }
-#main_contents .notes .img { margin-top: 16px; }
+#main_contents .notes .img {
+  grid-column: 3 / 4;
+  margin-top: 16px;
+}
 #main_contents .notes .img img { aspect-ratio: 1 / 1; object-fit: cover; }
 
-#main_contents .prof a { grid-column: 4 / 6; }
+#main_contents .prof .prof-home-wrap {
+  grid-column: 4 / 6;
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: var(--gap);
+}
 #main_contents .prof .img {
   display: grid;
   justify-content: right;
   grid-column: 1 / 2;
 }
 #main_contents .prof .img img { aspect-ratio: 4 / 5; object-fit: cover; }
+#main_contents .prof .prof-home-wrap .text-link { grid-column: 2 / 3; }
 #main_contents .prof p {
   width: 65%;
-  grid-column: 2 / 3;
   position: relative;
 }
 
@@ -565,12 +579,17 @@ footer {
 
 /* journal index ----------------------------------------------------------- */
 #main_contents .index_outer.journal_index .list { grid-column: 1 / 4; }
-#main_contents .index_outer.journal_index .list a {
+#main_contents .index_outer.journal_index .list .journal-wrap {
+  display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: var(--gap);
+  position: relative;
+}
+#main_contents .index_outer.journal_index .list .journal-wrap .text-link {
+  grid-column: 2 / 4;
+  display: block;
 }
 #main_contents .index_outer.journal_index .list .text_area {
-  grid-column: 2 / 4;
   margin-bottom: 56px;
   position: relative;
 }
@@ -890,8 +909,8 @@ footer { transition: opacity 0.8s ease-in-out; }
 }
 
 @media screen and (min-width: 835px) {
-  #main_contents .prof a,
-  #main_contents .journal a {
+  #main_contents .prof .prof-home-wrap,
+  #main_contents .journal .journal-home-wrap {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -909,14 +928,16 @@ footer { transition: opacity 0.8s ease-in-out; }
   .name_en { font-size: 200px; }
   .name_en .btm { height: 150px; }
 
-  #main_contents .design a { grid-column: 1 / 6; }
-  #main_contents .journal a { grid-column: 1 / 6; position: relative; }
-  #main_contents .journal .text_area { grid-column: 1 / 3; position: static; }
+  #main_contents .design .img { grid-column: 1 / 6; }
+  #main_contents .journal .journal-home-wrap { grid-column: 1 / 6; position: relative; }
+  #main_contents .journal .journal-home-wrap .text-link { grid-column: 1 / 3; }
+  #main_contents .journal .text_area { position: static; }
   #main_contents .journal .text_area::before { content: none; }
   #main_contents .journal .img { grid-column: 1 / 3; margin-top: 16px; }
-  #main_contents .notes a { grid-column: 1 / 6; }
+  #main_contents .notes .text-link { grid-column: 1 / 6; }
   #main_contents .notes p { grid-column: span 2; }
-  #main_contents .prof a { grid-column: 1 / 6; }
+  #main_contents .notes .img { grid-column: 1 / 3; }
+  #main_contents .prof .prof-home-wrap { grid-column: 1 / 6; }
   #main_contents .prof p { grid-column: 1 / 3; margin-top: 16px; }
 
   #main_contents .index_outer .list .item { margin-bottom: 64px; }
@@ -966,12 +987,13 @@ footer { transition: opacity 0.8s ease-in-out; }
   #main_contents .inner { margin-top: 22svh; }
   #main_contents .article_detail .body { grid-column: 1 / 6; }
   #main_contents .article_detail .detail_head { font-size: 18px; }
-  #main_contents .journal a { grid-column: span 3; }
+  #main_contents .journal .journal-home-wrap { grid-column: span 3; }
+  #main_contents .journal .journal-home-wrap .text-link { grid-column: 1 / 4; }
   #main_contents .journal .text_area { grid-column: 1 / 4; }
   #main_contents .journal .img { grid-column: 1 / 4; }
-  #main_contents .notes a { grid-column: 1 / 6; }
+  #main_contents .notes .text-link { grid-column: 1 / 6; }
   #main_contents .notes p { grid-column: span 3; }
-  #main_contents .prof a { grid-column: 1 / 6; }
+  #main_contents .prof .prof-home-wrap { grid-column: 1 / 6; }
   #main_contents .prof .img { grid-column: 1 / 3; }
   #main_contents .prof p { grid-column: 1 / 4; }
 
@@ -1003,4 +1025,107 @@ footer { transition: opacity 0.8s ease-in-out; }
     transition-duration: 0.001ms !important;
   }
   html { scroll-behavior: auto; }
+}
+
+/* ---------- 13. Image Lightbox 图片预览浮层 ---------------------------- */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: zoom-out;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#lightbox.is-open {
+  display: flex;
+  opacity: 1;
+}
+#lightbox.is-animating {
+  display: flex;
+}
+#lightbox-stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  z-index: 1;
+}
+#lightbox-stage.is-dragging { cursor: grabbing; }
+#lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  display: block;
+  transition: transform 0.1s ease;
+  transform-origin: center center;
+  will-change: transform;
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: auto;
+}
+#lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+#lightbox-close:hover {
+  background: #ffffff;
+  transform: scale(1.08);
+}
+#lightbox-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: #111;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* ---------- 10b. Water band — 水面实拍背景 + 涟漪字体 -------------------- */
+.trip {
+  background-image: url("../img/water-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.trip canvas.water {
+  mix-blend-mode: soft-light;
+  opacity: 0.88;
+}
+/* 涟漪动效：逐字正弦位移，will-change 开启 GPU 加速 */
+.trip .signature .ripple-char {
+  display: inline-block;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trip .signature .ripple-char {
+    transform: none !important;
+    animation: none !important;
+  }
 }
