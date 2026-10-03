@@ -787,7 +787,7 @@ footer {
   opacity: 0.5;
 }
 
-/* ---------- 10. Water band ---------------------------------------------- */
+/* ---------- 10. Water band 水面横幅 -------------------------------------- */
 .trip {
   position: relative;
   z-index: 100;
@@ -796,14 +796,35 @@ footer {
   overflow: hidden;
   background: #12161a;
 }
+/* 实拍水面照片作为底层。
+   用伪元素承载，让 grayscale 只作用于照片本身，不波及上层的 canvas 与署名文字。
+   彩色原图保留、灰调由 CSS 现算 —— 与 #main_contents .img img 的处理方式一致，
+   日后想恢复彩色只需删掉 filter 一行。 */
+.trip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("../img/water-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: grayscale(100%);
+}
+/* 程序生成的水面动画叠在照片之上，soft-light 让它只负责起伏与高光 */
 .trip .water {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
+  mix-blend-mode: soft-light;
+  opacity: 0.88;
 }
 /* 悬停时水面"接光"：很慢的一层天光，不参与交互 */
 .trip .water-glow {
   position: absolute;
+  z-index: 2;
   inset: 0;
   pointer-events: none;
   opacity: 0;
@@ -833,6 +854,20 @@ footer {
   white-space: nowrap;
   mix-blend-mode: difference;
   -webkit-font-smoothing: antialiased;
+}
+/* 涟漪动效：逐字正弦位移，will-change 开启 GPU 加速 */
+.trip .signature .ripple-char {
+  display: inline-block;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trip .signature .ripple-char {
+    transform: none !important;
+    animation: none !important;
+  }
 }
 
 /* ---------- 11. Opening animation --------------------------------------- */
@@ -1104,28 +1139,86 @@ footer { transition: opacity 0.8s ease-in-out; }
   stroke-linecap: round;
 }
 
-/* ---------- 10b. Water band — 水面实拍背景 + 涟漪字体 -------------------- */
-.trip {
-  background-image: url("../img/water-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+/* ---------- 14. QR modal 微信二维码弹窗 ---------------------------------- */
+/* 与 #lightbox 共用一套视觉语言（同色遮罩 + backdrop 模糊），但语义不同：
+   二维码是"工具型"弹层，不做缩放拖拽，且必须保持彩色与锐利 ——
+   灰阶或插值都会影响扫码识别率，所以这里刻意不套 .img 的 grayscale 处理。 */
+#qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  opacity: 0;
+  visibility: hidden;
+  /* 关闭时等淡出播完再隐藏，否则过渡会被中断 */
+  transition: opacity 0.28s ease, visibility 0s linear 0.28s;
 }
-.trip canvas.water {
-  mix-blend-mode: soft-light;
-  opacity: 0.88;
+#qr-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.28s ease, visibility 0s;
 }
-/* 涟漪动效：逐字正弦位移，will-change 开启 GPU 加速 */
-.trip .signature .ripple-char {
-  display: inline-block;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+html.has-modal { overflow: hidden; }
+
+#qr-card {
+  position: relative;
+  padding: 22px 22px 16px;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transform: translateY(10px) scale(0.98);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
-@media (prefers-reduced-motion: reduce) {
-  .trip .signature .ripple-char {
-    transform: none !important;
-    animation: none !important;
-  }
+#qr-modal.is-open #qr-card { transform: translateY(0) scale(1); }
+
+#qr-img {
+  display: block;
+  width: min(62vw, 296px);
+  height: auto;
+  image-rendering: auto;
+}
+#qr-caption {
+  margin: 12px 0 0;
+  font-family: var(--font-cjk);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  padding-left: 0.18em;
+  color: #6b6b6b;
+}
+#qr-close {
+  position: absolute;
+  top: -13px;
+  right: -13px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #ffffff;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease;
+}
+#qr-close:hover { transform: scale(1.1); }
+#qr-close:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#qr-close svg {
+  width: 15px;
+  height: 15px;
+  stroke: #111;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+}
+@media (max-width: 500px) {
+  #qr-img { width: min(74vw, 260px); }
 }

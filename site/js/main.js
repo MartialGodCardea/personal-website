@@ -516,6 +516,77 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 9. WeChat QR modal — 二维码遮罩弹窗
+   *    拦截 SNS 导航里的 a[data-qr]，改为在当前页弹出遮罩层展示二维码，
+   *    背景用 backdrop-filter 做轻微高斯模糊。图片地址直接取自 href，
+   *    因此各层级页面（img/ 与 ../img/）都无需额外配置。
+   *    无 JS 时 href 仍然有效，会自动退回原来的新窗口打开。
+   * ------------------------------------------------------------------ */
+  function initQrModal() {
+    var trigger = $("a[data-qr]");
+    if (!trigger) return;
+    if ($("#qr-modal")) return;
+
+    var overlay = document.createElement("div");
+    overlay.id = "qr-modal";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "微信二维码");
+    overlay.innerHTML =
+      '<div id="qr-card">' +
+        '<button id="qr-close" type="button" aria-label="关闭">' +
+          '<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/>' +
+          '<line x1="18" y1="6" x2="6" y2="18"/></svg>' +
+        '</button>' +
+        '<img id="qr-img" alt="微信二维码，扫码添加">' +
+        '<p id="qr-caption">微信 · 扫码添加</p>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    var img = $("#qr-img", overlay);
+    var closeBtn = $("#qr-close", overlay);
+    var lastFocus = null;
+    var opened = false;
+
+    function open(src) {
+      if (opened) return;
+      opened = true;
+      lastFocus = document.activeElement;
+      img.src = src;
+      overlay.classList.add("is-open");
+      root.classList.add("has-modal");
+      closeBtn.focus();
+    }
+
+    function close() {
+      if (!opened) return;
+      opened = false;
+      overlay.classList.remove("is-open");
+      root.classList.remove("has-modal");
+      /* 焦点还给触发按钮，键盘用户不会丢失位置 */
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+
+    trigger.addEventListener("click", function (e) {
+      var src = trigger.getAttribute("href");
+      if (!src) return;                 /* 没有地址时保留默认跳转 */
+      e.preventDefault();
+      open(src);
+    });
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) close();       /* 点遮罩空白处关闭 */
+    });
+    closeBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      close();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && opened) close();
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * 6. Opening sequence — letters flicker, nav staggers, page settles
    * ------------------------------------------------------------------ */
   function opening() {
@@ -595,6 +666,7 @@
     observePlates();
     initLightbox();
     initRippleText();
+    initQrModal();
 
     if (root.classList.contains("is-loading")) {
       opening();

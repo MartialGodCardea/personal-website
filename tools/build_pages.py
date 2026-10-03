@@ -46,9 +46,9 @@ def header(page, title, desc):
           {nav}
           <li>
             <ul class="snsnav">
-              <li><a href="../img/wechat-qr.jpg" target="_blank" rel="noopener" title="微信 WeChat">wechat</a></li>
+              <li><a href="../img/wechat-qr.jpg" data-qr title="微信 WeChat">wechat</a></li>
               <li><a href="#" title="电话 Phone">phone</a></li>
-              <li><a href="mailto:hello@example.com" title="邮箱 Email">email</a></li>
+              <li><a href="mailto:anthonywang171003@gmail.com" title="邮箱 Email">email</a></li>
             </ul>
           </li>
         </ul>
