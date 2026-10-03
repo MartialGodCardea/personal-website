@@ -94,6 +94,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
     ├── build_pages.py        # 生成 notes/ 与 journal/ 全部页面
     ├── make_placeholders.py  # 用 Pillow 生成占位图
     ├── screenshot.py         # Chrome headless 截图（含移动端 iframe 模拟）
+    ├── pack_handoff.py       # 打包 website-handoff.zip（排除 .git / .workbuddy-ai）
     └── pngtool.py            # 纯标准库 PNG 像素探针（QA 用）
 ```
 
@@ -454,7 +455,13 @@ python tools/make_placeholders.py
 cd site && python -m http.server 8899 --bind 127.0.0.1 &
 python tools/screenshot.py index.html 0 out.png 1440 900            # 桌面
 python tools/screenshot.py index.html 0 out.png 390 1900 frame compact  # 移动端整页
+
+# 重新打包交付压缩包 website-handoff.zip
+python tools/pack_handoff.py
 ```
+
+`pack_handoff.py` 会自动排除 `.git/`、`.workbuddy-ai/`、`__pycache__/` 与 `*.zip`，
+所以可以放心反复执行。**改完内容记得重打一次**，否则交付包是旧的。
 
 `screenshot.py` 参数：`<页面(相对 site/)> <scrollY> <输出绝对路径> [宽] [高] [frame] [compact]`
 - `frame` — 用定宽 iframe 模拟移动端（**必须**，见 §6.1）
@@ -462,10 +469,11 @@ python tools/screenshot.py index.html 0 out.png 390 1900 frame compact  # 移动
 
 ### 5.3 改完自查清单
 
-1. `python tools/build_pages.py` 无报错
-2. 全站链接无断链（19 个 HTML、约 272 条站内引用）
+1. `python tools/build_pages.py` 无报错，且**重跑一次不产生任何差异**（幂等）
+2. 全站链接无断链（19 个 HTML、252 条站内引用）
 3. 桌面 1440px + 移动 390px 双端目视确认
 4. 未引入任何外部依赖（不要加 CDN、不要加 npm 包）
+5. 改了交付内容就重跑 `python tools/pack_handoff.py`
 
 ---
 
