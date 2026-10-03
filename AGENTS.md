@@ -106,7 +106,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 | 8 | Inner pages（索引列表） |
 | 8b | Article detail（文章详情） |
 | 9 | Profile page |
-| 10 | Trip band |
+| 10 | Water band（动态水面） |
 | 11 | Opening animation |
 | 12 | Responsive |
 
@@ -180,9 +180,9 @@ python tools/build_pages.py
 |---|---|---|
 | 1 | `renderDate()` | 右上角竖排日期，实时生成 |
 | 2 | `markNavigation()` | 读 `body[data-page]`，给对应导航项加 `.active`（首页不高亮） |
-| 3 | `observePlates()` | `IntersectionObserver` 给图片加 `.is-active`（触发显色） |
+| 3 | `observePlates()` | `IntersectionObserver` 给 `#main_contents .img` 加 `.is-active`（触发显色） |
 | 4 | `startRotators()` | 读 `[data-images]` JSON，定时交叉淡入换图 |
-| 5 | `pickTrip()` | 读 `#random-trip[data-trips]`，只随机换照片；带内文案已固定为一行署名 |
+| 5 | `waterBand()` | 动态水面：高度场波动 + 跟随光标的涟漪（见 §4.6） |
 | 6 | `opening()` | 首屏字母闪烁 + 导航逐项入场，`sessionStorage.hasVisited` 保证只播一次 |
 
 > **新增页面时必须设置 `<body data-page="...">`**，取值与 `NAV` 里的 key 一致
@@ -194,12 +194,31 @@ python tools/build_pages.py
 把照片放进 `site/img/`，**保持原有文件名**即可，布局不用动：
 
 `design-01..04.jpg`（首页大图轮播）、`profile.jpg`、`journal-01..03.jpg`、
-`note-01..02.jpg`、`trip-01..03.jpg`。
+`note-01..02.jpg`。
 
 **这 13 张目前是抽象占位图**，见 §7。
 
 另有 `wechat-qr.jpg`（微信个人二维码）是**真实素材**，不是占位图，供 `snsnav` 的
 `wechat` 链接打开；换码时同名替换即可。
+
+### 4.6 动态水面（原「旅行带」）
+
+页面底部那条 100vh 的横幅已从「随机旅行照片」改成**程序生成的动态水面**
+(`#water-band`)，由 `js/main.js` 的 `waterBand()` 驱动：
+
+- 两张 `Float32Array` 高度场交替推进波动方程，逐像素做位移采样 + 波峰高光；
+- 模拟网格远小于 CSS 像素（约 1/3，且像素数封顶 12 万），再由浏览器放大，
+  既轻又柔；`ResizeObserver` 跟随尺寸变化；
+- 鼠标划过注入涟漪（按速度决定强度）、按下是一记更大的落水；另有约 1.2–2.9 秒
+  一次的随机环境滴落，避免"死水"；悬停时 `.water-glow` 渐亮，像水面接光；
+- 离屏时 `IntersectionObserver` 停机；`prefers-reduced-motion: reduce` 时只画一帧静水。
+
+调参集中在 `waterBand()` 顶部：`DAMP`（衰减）、`SLOPE`（位移强度）、`SPEC`（高光）。
+`paintTexture()` 负责水体底纹（深度渐变 + 水平拉伸的焦散细纹）。
+
+> `trip-01..03.jpg` 与 `data-trips` / 随机换图逻辑已随本次改版**退出使用**，
+> 图片文件保留备用；要恢复照片横幅就把 `TRIP` 模板换回 `<div class="img">` 并
+> 恢复 `pickTrip()`（见 git 历史）。
 
 ---
 
@@ -421,9 +440,9 @@ SITE = os.path.join(ROOT, "site")
 
 ## 7. 待办 / 已知局限
 
-- [ ] **`site/img/` 下 13 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
-      让"悬停显色"有效果可看（`wechat-qr.jpg` 除外，见 §4.5）。换成真实照片时保持
-      文件名不变。
+- [ ] **`site/img/` 下 12 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
+      让"悬停显色"有效果可看（`wechat-qr.jpg` 是真实素材，`trip-01..03.jpg` 已停用，
+      见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
 - [ ] **右上角 SNS 导航 3 项，其中 2 项仍是占位**（在各页 `<ul class="snsnav">` 内，
       共 19 个 HTML 文件，改 `tools/build_pages.py` 的 `header()` 后重新生成）：
       `wechat` → `img/wechat-qr.jpg`（已接二维码）、

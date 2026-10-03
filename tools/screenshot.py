@@ -41,7 +41,7 @@ COMPACT = """
   #main_contents .index_outer.design_index .list .item { margin-bottom: 80px !important; }
   #main_contents .index_outer .history,
   #main_contents .index_outer .skills { margin-top: 60px !important; }
-  .trip .img img { height: 620px !important; }
+  .trip { height: 620px !important; }
 </style>
 """
 

@@ -209,6 +209,8 @@ h1.id {
   width: auto;
   writing-mode: horizontal-tb;
   align-items: flex-start;
+  position: relative;
+  left: -20px;              /* 贴边并轻微出血（视口左侧 -4px），同左上角 SONGLIN 的处理 */
 }
 #globalnav li .snsnav li {
   display: block;
@@ -766,21 +768,31 @@ footer {
   opacity: 0.5;
 }
 
-/* ---------- 10. Trip band ----------------------------------------------- */
+/* ---------- 10. Water band ---------------------------------------------- */
 .trip {
   position: relative;
   z-index: 100;
   display: block;
+  height: 100vh;
+  overflow: hidden;
+  background: #12161a;
 }
-.trip .img img {
+.trip .water {
   display: block;
   width: 100%;
-  height: 100vh;
-  object-fit: cover;
-  filter: grayscale(100%) brightness(70%);
-  transition: filter 0.4s ease;
+  height: 100%;
 }
-.trip:hover .img img { filter: grayscale(0%) brightness(100%); }
+/* 悬停时水面"接光"：很慢的一层天光，不参与交互 */
+.trip .water-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(125% 72% at 50% -6%,
+    rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 62%);
+  transition: opacity 1.1s ease;
+}
+.trip:hover .water-glow { opacity: 1; }
 .trip .text_area {
   width: 80%;
   position: absolute;
@@ -790,14 +802,15 @@ footer {
   text-align: center;
   z-index: 10;
 }
-/* 单行署名：与首页「王松林」名牌同一套字体 / 字重 / 反相逻辑 */
+/* 单行题款：同首页「王松林」的字体 / 字重 / 反相逻辑，但收敛成一行题款 */
 .trip .text_area .signature {
   color: var(--ghost);
   font-family: var(--font-cjk);
   font-weight: 900;
-  font-size: 72px;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: clamp(22px, 3vw, 48px);
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  padding-left: 0.16em;     /* 补掉末字多出的字距，让整行视觉居中 */
   white-space: nowrap;
   mix-blend-mode: difference;
   -webkit-font-smoothing: antialiased;
@@ -844,8 +857,6 @@ footer { transition: opacity 0.8s ease-in-out; }
   .name_en { font-size: 240px; }
   .name_en .top { top: -8px; }
   .name_en .btm { height: 180px; }
-
-  .trip .text_area .signature { font-size: 56px; }
 
   #main_contents { margin: 72svh 44px 40svh; }
   #main_contents .inner { column-gap: 32px; }
@@ -936,7 +947,6 @@ footer { transition: opacity 0.8s ease-in-out; }
   #main_contents .index_outer.journal_index .list .text_area { grid-column: 2 / 3; }
   #main_contents .index_outer.journal_index .list .img { grid-column: 1 / 2; }
 
-  .trip .text_area .signature { font-size: 30px; }
 }
 
 @media only screen and (max-width: 500px) {
@@ -945,6 +955,7 @@ footer { transition: opacity 0.8s ease-in-out; }
   #globalnav { top: 36svh; }
   #globalnav > ul { margin: 0 8px; }
   #globalnav li { width: 32px; }
+  #globalnav > ul > li:last-child { left: -12px; }
 
   .name_ja { grid-template-rows: 200px 1fr 18vh; bottom: -2px; }
   .name_en { font-size: 120px; }
@@ -982,7 +993,6 @@ footer { transition: opacity 0.8s ease-in-out; }
   #main_contents .index_outer .skills h2,
   #main_contents .index_outer .skills ul { grid-column: 1 / 5; }
 
-  .trip .text_area .signature { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
