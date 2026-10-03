@@ -1,0 +1,27 @@
+# ---- 本机环境 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- 编辑器 / IDE ----
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- 截图与临时产物 ----
+# tools/screenshot.py 会在 site/ 下临时生成这些文件
+site/_shot.html
+site/_frame.html
+*.png
+
+# ---- 交付包 ----
+# 由仓库内容重新打包即可生成，无需纳入版本管理
+website-handoff.zip

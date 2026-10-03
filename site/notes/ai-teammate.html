@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>我把 AI 变成了一个排障搭子 · 王松林</title>
+<meta name="description" content="不是让 AI 替我判断，而是让它替我记住。三年工单量堆起来，人的记性是不够用的。">
+<link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+<link media="screen" href="../css/style.css" type="text/css" rel="stylesheet">
+</head>
+<body data-page="notes">
+<div id="wrapper">
+
+  <header>
+    <h1 class="id"><a href="../index.html">SONGLIN</a></h1>
+    <div class="todays_date"></div>
+
+    <nav>
+      <div id="globalnav">
+        <ul>
+          <li><a href="../index.html" data-nav="home">最初一页</a></li>
+          <li><a href="../profile/index.html" data-nav="profile">关于我</a></li>
+          <li><a href="../projects/index.html" data-nav="projects">做过的事</a><span>(案例)</span></li>
+          <li><a href="index.html" data-nav="notes">写下的字</a></li>
+          <li><a href="../journal/index.html" data-nav="journal">日常与照片</a></li>
+          <li>
+            <ul class="snsnav">
+              <li><a href="mailto:hello@example.com" title="邮箱 Email">ML</a></li>
+              <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener" title="领英 LinkedIn">LI</a></li>
+              <li><a href="https://github.com/" target="_blank" rel="noopener" title="GitHub">GH</a></li>
+              <li><a href="#" title="微信 WeChat">WX</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="name_ja">
+      <div class="name_1">王</div>
+      <div class="name_2"><span>松</span></div>
+      <div class="name_3"><span>林</span></div>
+    </div>
+
+    <div class="name_en">
+      <div class="top"><span>S</span><span>O</span><span>N</span><span>G</span></div>
+      <div class="btm"><span>L</span><span>I</span><span>N</span></div>
+    </div>
+  </header>
+
+  <div id="container">
+    <main>
+      <div id="main_contents" class="hm">
+
+        <div class="index_outer inner">
+          <article class="article_detail">
+            <div class="meta">2026.08.11 &middot; 工具</div>
+            <h1 class="detail_head">我把 AI 变成了一个排障搭子</h1>
+            <p class="detail_lead">我不太喜欢「用 AI 替代人工」这个说法。在我这里，AI 干的是另一件事：它替我记住我记不住的东西，然后在我需要的时候递过来。</p>
+            <div class="body"><p>排障这件事，难的从来不是单点知识，而是<strong>联想</strong>。客户说「晚上八点以后网就慢」，你得同时想到：是不是小区共享带宽的晚高峰、是不是某个固件版本的已知问题、是不是上个月同一片区报过类似的单。这三条线索分别躺在三个系统里。</p>
+
+<p>人的工作记忆只有那么点大。所以我做的事情很简单：把这三类信息在提问的瞬间一起摆到我面前。</p>
+
+<h2>我的用法：三句话的输入</h2>
+
+<p>我不写复杂的 Prompt，日常就是三句话：</p>
+
+<ul>
+  <li>客户原话是什么（尽量保留他的用词，不要翻译）；</li>
+  <li>已经做过的动作和结果；</li>
+  <li>我需要你帮我想什么（列可能性 / 找相似工单 / 生成给客户的解释）。</li>
+</ul>
+
+<p>第三条最关键。同一个现象，「帮我列出可能原因」和「帮我写一段能直接发给客户的话」，得到的东西完全不一样。</p>
+
+<h2>它做不好的事，我也说清楚</h2>
+
+<p>有一段时间我差点被它带偏。它会非常自信地给出一个听起来很合理、但实际不成立的判断——因为历史工单里正好有一条相似的。相似不等于相同，而 AI 对「相似」的把握比人松得多。</p>
+
+<p>所以我给自己立了一条规矩：<strong>AI 负责提可能性，人负责做决定，而且这个决定要能被追溯</strong>。每次采纳它的建议，我都会在工单备注里写一句「依据是什么」。这既是对客户负责，也是我后来能整理出两百多条知识库条目的原因。</p>
+
+<h2>一年下来的变化</h2>
+
+<p>最直接的变化是同类工单的处理时长短了约三成。但我觉得更有价值的，是它改变了我的注意力分配——以前我把大量精力花在「想起来」，现在花在「判断」和「沟通」上。而后面这两件事，恰好是短时间内 AI 还替不了的。</p></div>
+            <div class="detail_foot">
+              <a class="prev" href="last-mile.html"><span>上一篇</span>从「能用」到「愿意用」：AI 落地的最后一公里</a>
+              <a class="next" href="prompt-for-non-tech.html"><span>下一篇</span>给非技术同事讲 Prompt：我常用的三个套路</a>
+            </div>
+          </article>
+        </div>
+      </div>
+
+
+      <div class="trip" id="random-trip"
+           data-trips='[
+             {"url":"../journal/index.html","image":"../img/trip-01.jpg","title":"从工单到现场：一次跨时区的协作","place":"SYDNEY"},
+             {"url":"../journal/index.html","image":"../img/trip-02.jpg","title":"把排查清单写成了一首诗","place":"MELBOURNE"},
+             {"url":"../journal/index.html","image":"../img/trip-03.jpg","title":"深夜值班时的一盏灯","place":"BRISBANE"}
+           ]'>
+        <div class="img">
+          <img src="../img/trip-01.jpg" alt="照片">
+        </div>
+        <div class="text_area">
+          <a href="../journal/index.html">
+            <h2 class="title">从工单到现场：一次跨时区的协作</h2>
+            <div class="place">SYDNEY</div>
+          </a>
+          <div class="from">From My Journal</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <div id="copyright"><small>COPYRIGHT &copy; WANG SONGLIN. ALL RIGHTS RESERVED.</small></div>
+  </footer>
+
+</div>
+<script src="../js/main.js"></script>
+</body>
+</html>

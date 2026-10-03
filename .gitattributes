@@ -1,0 +1,13 @@
+# 统一换行符：仓库内一律用 LF 存储，检出时按平台转换。
+# 避免 Windows 上的 CRLF 让 diff 出现整文件改动。
+* text=auto eol=lf
+
+# 二进制资源：不做换行符转换
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.woff2 binary
+*.zip  binary
+
+# 字体二进制差异不可读，标记为二进制以免污染 diff
+*.woff2 -diff -merge -text
