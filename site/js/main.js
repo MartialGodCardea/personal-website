@@ -96,7 +96,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Random trip band  (data-trips="[..]")
+   * 5. Random trip band  (data-trips="[..]") — 只随机换图，文案固定
    * ------------------------------------------------------------------ */
   function pickTrip() {
     var host = $("#random-trip");
@@ -110,13 +110,7 @@
     if (!Array.isArray(trips) || !trips.length) return;
     var t = trips[Math.floor(Math.random() * trips.length)];
     var img = host.querySelector("img");
-    var link = host.querySelector(".text_area a");
-    var title = host.querySelector(".title");
-    var place = host.querySelector(".place");
     if (img && t.image) img.src = t.image;
-    if (title && t.title) title.textContent = t.title;
-    if (place && t.place) place.textContent = t.place;
-    if (link && t.url) link.href = t.url;
   }
 
   /* ------------------------------------------------------------------ *

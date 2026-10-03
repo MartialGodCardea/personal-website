@@ -79,7 +79,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 │   ├── css/style.css         # ★ 全部样式，1015 行，13 个分节
 │   ├── js/main.js            # 全部交互，6 个职责（见 §4.4）
 │   ├── fonts/                # 3 个自托管 woff2
-│   ├── img/                  # 13 张 JPG（★ 占位图）+ 4 个 SVG
+│   ├── img/                  # 14 张 JPG（13 张占位图 + wechat-qr.jpg）+ 4 个 SVG
 │   ├── profile/index.html    # 关于我
 │   ├── projects/index.html   # 做过的事（4 个案例）
 │   ├── notes/                # 写下的字：index.html + 8 篇
@@ -182,7 +182,7 @@ python tools/build_pages.py
 | 2 | `markNavigation()` | 读 `body[data-page]`，给对应导航项加 `.active`（首页不高亮） |
 | 3 | `observePlates()` | `IntersectionObserver` 给图片加 `.is-active`（触发显色） |
 | 4 | `startRotators()` | 读 `[data-images]` JSON，定时交叉淡入换图 |
-| 5 | `pickTrip()` | 读 `#random-trip[data-trips]`，随机选一条展示 |
+| 5 | `pickTrip()` | 读 `#random-trip[data-trips]`，只随机换照片；带内文案已固定为一行署名 |
 | 6 | `opening()` | 首屏字母闪烁 + 导航逐项入场，`sessionStorage.hasVisited` 保证只播一次 |
 
 > **新增页面时必须设置 `<body data-page="...">`**，取值与 `NAV` 里的 key 一致
@@ -197,6 +197,9 @@ python tools/build_pages.py
 `note-01..02.jpg`、`trip-01..03.jpg`。
 
 **这 13 张目前是抽象占位图**，见 §7。
+
+另有 `wechat-qr.jpg`（微信个人二维码）是**真实素材**，不是占位图，供 `snsnav` 的
+`wechat` 链接打开；换码时同名替换即可。
 
 ---
 
@@ -419,13 +422,13 @@ SITE = os.path.join(ROOT, "site")
 ## 7. 待办 / 已知局限
 
 - [ ] **`site/img/` 下 13 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
-      让"悬停显色"有效果可看。换成真实照片时保持文件名不变（见 §4.5）。
-- [ ] **右上角 SNS 导航 4 项全是占位**（在各页 `<ul class="snsnav">` 内，需逐页替换，
-      共 19 个 HTML 文件）：
-      `ML` → `mailto:hello@example.com`、
-      `LI` → `https://www.linkedin.com/`（通用首页，非个人主页）、
-      `GH` → `https://github.com/`（同上）、
-      `WX` → `href="#"`（未填）。
+      让"悬停显色"有效果可看（`wechat-qr.jpg` 除外，见 §4.5）。换成真实照片时保持
+      文件名不变。
+- [ ] **右上角 SNS 导航 3 项，其中 2 项仍是占位**（在各页 `<ul class="snsnav">` 内，
+      共 19 个 HTML 文件，改 `tools/build_pages.py` 的 `header()` 后重新生成）：
+      `wechat` → `img/wechat-qr.jpg`（已接二维码）、
+      `phone` → `href="#"`（待填真实号码）、
+      `email` → `mailto:hello@example.com`（示例地址，待换真实邮箱）。
 - [ ] `NOTES` 数据里的 `img` 字段未被使用，可清理（见 §4.1）。
 - [ ] 站内搜索、RSS、站点地图（sitemap.xml）均未实现。
 - [ ] 无分析统计、无评论系统（纯静态，如需请接第三方）。

@@ -199,8 +199,16 @@ h1.id {
   white-space: nowrap;
 }
 #globalnav li .snsnav {
-  text-align: center;
-  flex-direction: row;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+/* SNS 这一格是横排容器：一行一个联系人方式，从最左侧起排 */
+#globalnav > ul > li:last-child {
+  width: auto;
+  writing-mode: horizontal-tb;
+  align-items: flex-start;
 }
 #globalnav li .snsnav li {
   display: block;
@@ -782,48 +790,18 @@ footer {
   text-align: center;
   z-index: 10;
 }
-.trip .text_area .title,
-.trip .text_area .from {
+/* 单行署名：与首页「王松林」名牌同一套字体 / 字重 / 反相逻辑 */
+.trip .text_area .signature {
   color: var(--ghost);
-  font-family: var(--font-display);
-  font-weight: 500;
-  line-height: 1.2;
+  font-family: var(--font-cjk);
+  font-weight: 900;
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  mix-blend-mode: difference;
   -webkit-font-smoothing: antialiased;
 }
-.trip .text_area .title {
-  display: inline-block;
-  position: relative;
-  font-size: 32px;
-  font-weight: 500;
-}
-.trip .text_area .title::before {
-  content: "";
-  width: 24px;
-  height: 12px;
-  margin-left: -12px;
-  background: url(../img/arrow_dia_w.svg) no-repeat center / contain;
-  position: absolute;
-  bottom: -32px;
-  left: 50%;
-}
-.trip .text_area .place {
-  font-size: 22px;
-  margin-top: 16px;
-  padding-top: 24px;
-  position: relative;
-  letter-spacing: 0.08em;
-}
-.trip .text_area .place::before {
-  content: "";
-  width: 10px;
-  height: 1px;
-  background: var(--ghost);
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-.trip .text_area .from { margin-top: 120px; font-size: 18px; }
 
 /* ---------- 11. Opening animation --------------------------------------- */
 html.is-loading .name_en span { opacity: 0; }
@@ -866,6 +844,8 @@ footer { transition: opacity 0.8s ease-in-out; }
   .name_en { font-size: 240px; }
   .name_en .top { top: -8px; }
   .name_en .btm { height: 180px; }
+
+  .trip .text_area .signature { font-size: 56px; }
 
   #main_contents { margin: 72svh 44px 40svh; }
   #main_contents .inner { column-gap: 32px; }
@@ -956,9 +936,7 @@ footer { transition: opacity 0.8s ease-in-out; }
   #main_contents .index_outer.journal_index .list .text_area { grid-column: 2 / 3; }
   #main_contents .index_outer.journal_index .list .img { grid-column: 1 / 2; }
 
-  .trip .text_area .title { font-size: 24px; }
-  .trip .text_area .place { font-size: 18px; margin-top: 8px; padding-top: 16px; }
-  .trip .text_area .from { font-size: 16px; margin-top: 80px; }
+  .trip .text_area .signature { font-size: 30px; }
 }
 
 @media only screen and (max-width: 500px) {
@@ -1003,6 +981,8 @@ footer { transition: opacity 0.8s ease-in-out; }
   #main_contents .index_outer .skills { grid-column: 1 / 5; }
   #main_contents .index_outer .skills h2,
   #main_contents .index_outer .skills ul { grid-column: 1 / 5; }
+
+  .trip .text_area .signature { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
