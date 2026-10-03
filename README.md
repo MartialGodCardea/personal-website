@@ -19,7 +19,7 @@ python -m http.server 8899
 | 路径 | 说明 |
 |---|---|
 | `site/` | **交付物**。整个网站，可直接部署到任意静态托管 |
-| `site/css/style.css` | 全部样式（1015 行，13 个分节） |
+| `site/css/style.css` | 全部样式（1006 行，13 个分节） |
 | `site/js/main.js` | 全部交互（6 个职责） |
 | `tools/` | 构建与校验脚本，不参与部署 |
 
@@ -34,7 +34,8 @@ python -m http.server 8899
 - **加文章** → 编辑 `tools/build_pages.py` 的 `NOTES` / `JOURNAL` 列表，然后
   `python tools/build_pages.py`
   （`notes/index.html` 是自动生成的，手改会被覆盖）
-- **换照片** → 覆盖 `site/img/` 下的同名文件，**当前 13 张是占位图**
+- **换照片** → 覆盖 `site/img/` 下的同名文件，**当前 12 张是占位图**
+  （`wechat-qr.jpg` 是真实微信二维码；`trip-01..03.jpg` 已随动态水面改版停用）
 
 ## 交接给 AI agent
 

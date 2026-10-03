@@ -76,7 +76,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 ├── README.md                 # 给人看的简短指引
 ├── site/                     # ★ 交付物：整个网站，可直接部署
 │   ├── index.html            # 首页（四段式：design / journal / notes / prof）
-│   ├── css/style.css         # ★ 全部样式，1015 行，13 个分节
+│   ├── css/style.css         # ★ 全部样式，1006 行，13 个分节
 │   ├── js/main.js            # 全部交互，6 个职责（见 §4.4）
 │   ├── fonts/                # 3 个自托管 woff2
 │   ├── img/                  # 14 张 JPG（13 张占位图 + wechat-qr.jpg）+ 4 个 SVG
