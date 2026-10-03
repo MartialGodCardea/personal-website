@@ -40,3 +40,23 @@ python -m http.server 8899
 
 请让它先读 **[AGENTS.md](./AGENTS.md)** —— 里面有完整的设计约束、文件地图、
 常见改动做法、构建命令和已知坑。不要只丢代码给它。
+
+## 版本管理
+
+本项目已是 Git 仓库（主分支 `main`），目前只在本机做版本管理，未配置远端。
+
+```bash
+git status
+git diff
+git add -A && git commit -m "改了什么"
+git log --oneline
+```
+
+想推到 GitHub / Gitee 时，先在网页端建一个**空仓库**（不要勾选 README），然后：
+
+```bash
+git remote add origin <仓库地址>
+git push -u origin main
+```
+
+推送需要先配好 SSH 密钥或 Personal Access Token，详见 [AGENTS.md](./AGENTS.md) §5.0。

@@ -202,6 +202,34 @@ python tools/build_pages.py
 
 ## 5. 构建与校验
 
+### 5.0 版本管理
+
+本项目已初始化为 Git 仓库，主分支 `main`（首次提交 `8fb8d0b`）。**只在本机做版本管理，
+尚未配置任何远端**。
+
+```bash
+git status           # 看当前改动
+git diff             # 看待提交的具体改动
+git log --oneline    # 看历史
+
+git add -A && git commit -m "说明这次改了什么"   # 提交
+
+git checkout .       # 丢弃全部未提交改动（危险，不可逆）
+git revert <hash>    # 撤销某次已提交的改动（安全，会留记录）
+```
+
+两个配置文件的用意：
+
+- **`.gitattributes`** — 仓库内统一按 LF 存储换行符。Windows 下编辑器若存成 CRLF，
+  Git 会自动转换，避免出现"整个文件都改了"的假 diff。
+- **`.gitignore`** — 排除 `__pycache__/`、编辑器目录、截图临时文件（`site/_shot.html`、
+  `site/_frame.html`）、`*.png`（截图产物；**项目内没有任何 png 资源**，13 张图均为 JPG）、
+  以及 `website-handoff.zip`（可由仓库内容随时重新打包，无需入库）。
+
+**给 AI agent 的提示**：如果要在本仓库上做较大改动，建议先开新分支
+（`git switch -c 改动名`），改完确认无误再合回 `main`，这样随时可以放弃。
+提交信息请用中文说清"改了什么、为什么"，不要写"update"这类无信息量的词。
+
 ### 5.1 环境
 
 - **Python 3.9+**。本机路径：`C:/Users/Antho/.workbuddy-ai/binaries/python/versions/3.13.12/python.exe`
