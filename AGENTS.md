@@ -81,22 +81,26 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 ├── AGENTS.md                 # 本文件
 ├── README.md                 # 给人看的简短指引
 ├── 技术架构.md               # 技术选型与整体结构说明（偏科普，改动前可先扫一遍）
+├── 字体规范.md               # 字体清单与选型记录（复刻版 vs 原站真实字体）
+├── 美术体检报告.md           # 美术问题清单：本轮已修 / 建议后续修（含验收命令）
 ├── site/                     # ★ 交付物：整个网站，可直接部署
 │   ├── index.html            # 首页（四段式：design / journal / notes / prof）
-│   ├── css/style.css         # ★ 全部样式，1266 行，15 个分节
+│   ├── css/style.css         # ★ 全部样式，1286 行，15 个分节
 │   ├── js/main.js            # 全部交互，9 个职责 + boot（见 §4.4）
-│   ├── fonts/                # 3 个自托管 woff2
-│   ├── img/                  # 15 张 JPG（13 张占位图 + water-bg.jpg + wechat-qr.jpg）+ 4 个 SVG
+│   ├── fonts/                # 2 个自托管 woff2：中文子集 + 西文子集（见 §6.5）
+│   ├── img/                  # 12 张 JPG（10 张占位图 + water-bg.jpg + wechat-qr.jpg）+ 3 个 SVG
 │   ├── profile/index.html    # 关于我
 │   ├── projects/index.html   # 做过的事（4 个案例）
 │   ├── notes/                # 写下的字：index.html + 8 篇
 │   └── journal/              # 日常与照片：index.html + 6 篇
 └── tools/                    # 构建与校验脚本，★ 不参与部署
     ├── build_pages.py        # 生成 notes/ 与 journal/ 全部页面
+    ├── build_font_subset.py  # 生成中文 + 西文两套字体子集（含 cmap 覆盖自校验）
     ├── make_placeholders.py  # 用 Pillow 生成占位图
     ├── screenshot.py         # Chrome headless 截图（含移动端 iframe 模拟）
     ├── pack_handoff.py       # 打包 website-handoff.zip（排除 .git / .workbuddy-ai）
-    └── pngtool.py            # 纯标准库 PNG 像素探针（QA 用）
+    ├── pngtool.py            # 纯标准库 PNG 像素探针（QA 用）
+    └── font-src/             # 西文源字体（Newsreader 可变字体，OFL），供离线重建子集
 ```
 
 **`site/css/style.css` 分节索引**（改样式先按这个定位）：
@@ -166,21 +170,53 @@ python tools/build_pages.py
 
 ### 4.3 改配色 / 间距 / 字体
 
-只改 `css/style.css` 的 `/* 1. Tokens */` 一节：
+只改 `css/style.css` 的 `/* 1. Tokens */` 一节。颜色、间距、缓动、圆角、阴影、
+字体栈**全部**收敛在这一个 `:root` 里，改这一节即可全局生效：
 
 ```css
 :root {
+  /* —— 基础色 —— */
   --paper: #ffffff;        /* 底色 */
   --ink: #000000;          /* 正文色 */
   --ghost: #fafafa;        /* ★ 浮层专用：配合 difference 混合，别乱改 */
   --latin-ghost: 0.05;     /* 巨型背景字透明度 */
+  --sel: #333333;          /* 选中文字背景 */
+  --hairline: rgba(0, 0, 0, 0.14);
+  --ink-soft: #111;        /* 次级深色（水面暗底等） */
+  --muted: #6b6b6b;        /* 弱化文字（版权、脚注） */
+  --water: #12161a;        /* 水面横幅底色 */
+
+  /* —— 布局 —— */
   --gap: 24px;             /* 列间距 */
   --pad-x: 40px;           /* 左右页边距 */
   --nav-top: 40svh;        /* 导航起始高度 */
+
+  /* —— 缓动 —— */
+  --ease:        cubic-bezier(0.25, 0.1, 0.25, 1);   /* 通用 */
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);     /* 对称进出 */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);     /* 只减速（入场） */
+
+  /* —— 形状 —— */
+  --radius: 4px;
+  --radius-sm: 2px;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 18px 60px rgba(0, 0, 0, 0.3);
+  --overlay-blur: 7px;     /* 两个浮层的背景高斯模糊半径 */
+
+  /* —— 字体 —— */
+  --font-display: "Newsreader", "Noto Serif SC", …;  /* 西文衬线（首选自托管） */
+  --font-cjk:     "Noto Serif SC", …;                /* 中文衬线 */
+  --font-body:    "PingFang SC", …;                  /* 正文无衬线 */
 }
 ```
 
 字体栈是 `--font-display` / `--font-cjk` / `--font-body` 三个变量，改这里全站生效。
+**`--font-display` 的首选西文现在是自托管的 `Newsreader`**（不再是 Bodoni Moda），
+中文由 `--font-cjk` 的 `Noto Serif SC` 全站子集兜底——两套字体都是自托管、零外部请求，
+字体文件与子集重建方法见 §6.5。
+
+> 缓动原先在各处散写成裸 `ease` / `ease-in-out` / `cubic-bezier(...)`，现已全部收敛
+> 到上面三个 token。加新过渡时请复用 token，不要再写裸值。
 
 ### 4.4 改交互行为
 
@@ -210,7 +246,8 @@ python tools/build_pages.py
 `design-01..04.jpg`（首页大图轮播）、`profile.jpg`、`journal-01..03.jpg`、
 `note-01..02.jpg`。
 
-**这 13 张目前是抽象占位图**，见 §7。
+**这 10 张目前是抽象占位图**，见 §7。（`trip-01..03.jpg` 三张已随照片横幅改版停用并删除，
+见 §4.6。）
 
 另有 `water-bg.jpg`（水面横幅底图）与 `wechat-qr.jpg`（微信二维码）是**真实素材**，
 不是占位图，分别见 §4.6 与 §4.7。换图时同名替换即可。
@@ -252,8 +289,8 @@ python tools/build_pages.py
 静水。调参集中在 `waterBand()` 顶部：`DAMP`（衰减）、`SLOPE`（位移强度）、`SPEC`（高光）。
 
 > `trip-01..03.jpg` 与 `data-trips` / 随机换图逻辑已随本次改版**退出使用**，
-> 图片文件保留备用；要恢复照片横幅就把 `TRIP` 模板换回 `<div class="img">` 并
-> 恢复 `pickTrip()`（见 git 历史）。
+> 三张图已于 2026-10-03 随死资产清理**删除**（`pickTrip()` 亦一并移除）。
+> 要恢复照片横幅，需从 git 历史取回 `TRIP` 模板与 `pickTrip()`，并把图片文件补回 `site/img/`。
 
 ### 4.7 两个浮层：图片灯箱与联系方式弹窗
 
@@ -265,9 +302,10 @@ python tools/build_pages.py
 - JS 自建 DOM（所以在 HTML 里搜不到 `#lightbox`，这是正常的）。
   支持 0.5–3x 缩放、拖拽平移、滚轮缩放、ESC / 点遮罩 / 关闭按钮退出。
 - 绑定选择器写死在 `bindImages()` 里：
-  `#main_contents .img img`、`#main_contents figure img`、`.plate img`。
+  `#main_contents .img img`、`#main_contents figure img`。
   **新增图片容器时要把选择器补进去，否则新图点了没反应。**
-  （原第 4 条 `#water-band canvas.water` 已随涟漪特效下线一并移除，见 §4.6。）
+  （原第 3 条 `.plate img` 与第 4 条 `#water-band canvas.water` 已分别随死代码清理、
+  涟漪特效下线移除，见 §4.6。）
 - 动态插入的图片需要重绑，调用 `window.__rebindLightbox()`。
 
 **联系方式弹窗**（`initContactModal()` / CSS 分节 14）——工具型弹层，三种联系方式共用：
@@ -340,9 +378,10 @@ git bundle create handoff.bundle --all
 
 - **`.gitattributes`** — 仓库内统一按 LF 存储换行符。Windows 下编辑器若存成 CRLF，
   Git 会自动转换，避免出现"整个文件都改了"的假 diff。
-- **`.gitignore`** — 排除 `__pycache__/`、编辑器目录、截图临时文件（`site/_shot.html`、
-  `site/_frame.html`）、`*.png`（截图产物；**项目内没有任何 png 资源**，13 张图均为 JPG）、
-  以及 `website-handoff.zip`（可由仓库内容随时重新打包，无需入库）。
+- **`.gitignore`** — 排除 `__pycache__/`、编辑器目录、`site/_*.html`（截图与字体自查
+  用的临时评审页）、`*.png`（截图产物；**项目内没有任何 png 资源**，12 张图均为 JPG）、
+  `_font-compare/`（字体对比样张，临时产物）、以及 `website-handoff.zip`
+  （可由仓库内容随时重新打包，无需入库）。
 
 **给 AI agent 的提示**：如果要在本仓库上做较大改动，建议先开新分支
 （`git switch -c 改动名`），改完确认无误再合回 `main`，这样随时可以放弃。
@@ -441,6 +480,8 @@ git reset --hard <hash>         # ⚠️ 丢弃该点之后的全部提交
 - **Pillow** 仅 `make_placeholders.py` 需要。本机装在隔离 venv：
   `C:/Users/Antho/.workbuddy-ai/binaries/python/envs/default`
   重新安装：`<venv>/Scripts/pip install Pillow`
+- **fonttools[woff]** 仅 `build_font_subset.py` 需要（`--flavor=woff2` 依赖 brotli）。
+  同样装在隔离 venv，重新安装：`<venv>/Scripts/pip install "fonttools[woff]"`
 - **Chrome** 仅 `screenshot.py` 需要。本机：`C:\Program Files\Google\Chrome\Application\chrome.exe`
 
 ### 5.2 常用命令
@@ -449,8 +490,11 @@ git reset --hard <hash>         # ⚠️ 丢弃该点之后的全部提交
 # 重新生成 notes/ 与 journal/ 全部页面
 python tools/build_pages.py
 
-# 重新生成 13 张占位图（需要 Pillow）
+# 重新生成 10 张占位图（需要 Pillow）
 python tools/make_placeholders.py
+
+# 重建两套字体子集（需要 fonttools[woff]，含 cmap 覆盖自校验）
+python tools/build_font_subset.py
 
 # 截图（本地需先起静态服务器在 8899 端口）
 cd site && python -m http.server 8899 --bind 127.0.0.1 &
@@ -461,7 +505,8 @@ python tools/screenshot.py index.html 0 out.png 390 1900 frame compact  # 移动
 python tools/pack_handoff.py
 ```
 
-`pack_handoff.py` 会自动排除 `.git/`、`.workbuddy-ai/`、`__pycache__/` 与 `*.zip`，
+`pack_handoff.py` 会自动排除 `.git/`、`.workbuddy-ai/`、`__pycache__/`、`*.zip`
+以及 `_*` 开头的临时评审页（`site/_shot.html` 等），
 所以可以放心反复执行。**改完内容记得重打一次**，否则交付包是旧的。
 
 `screenshot.py` 参数：`<页面(相对 site/)> <scrollY> <输出绝对路径> [宽] [高] [frame] [compact]`
@@ -474,7 +519,9 @@ python tools/pack_handoff.py
 2. 全站链接无断链（19 个 HTML、252 条站内引用）
 3. 桌面 1440px + 移动 390px 双端目视确认
 4. 未引入任何外部依赖（不要加 CDN、不要加 npm 包）
-5. 改了交付内容就重跑 `python tools/pack_handoff.py`
+5. **若新增了中文内容**：跑一次 `python tools/build_font_subset.py`，
+   确认末尾打印的 cmap 覆盖自校验通过（无 `missing` 字符），否则新字会掉字。
+6. 改了交付内容就重跑 `python tools/pack_handoff.py`
 
 ---
 
@@ -529,11 +576,44 @@ SITE = os.path.join(ROOT, "site")
 
 所以**不要**把脚本挪出 `tools/`，否则路径会错。移动后请同步改这段。
 
-### 6.5 字体子集：`noto-serif-sc-name.woff2` 只有 2.3 KB
+### 6.5 两套自托管字体子集：全站中文 + 西文
 
-因为它只包含「王松林」三个字（用 Google Fonts 的 `text=` 参数做的子集）。
-**如果要让名牌显示别的名字，必须重新生成这个子集**，否则新字会 fallback 到系统衬线字体，
-字形和字重都对不上。
+`site/fonts/` 下只有两个文件，都是**从站点实际用到的字符**裁出来的子集，全站零外部请求：
+
+| 文件 | 字体 | 大小 | 保留的可变轴 | 覆盖 |
+|---|---|---|---|---|
+| `noto-serif-sc-subset.woff2` | Noto Serif SC | **≈ 355 KB** | `wght` 200–900 | 全站中文 + 全角标点 + 拉丁数字（**964 个码位**） |
+| `newsreader-latin.woff2` | Newsreader | **≈ 83 KB** | `wght` 200–800 **+** `opsz` 6–72 | 仅西文（104 个码位） |
+
+两套都由 `tools/build_font_subset.py` **一次生成**（脚本支持中西双目标）：
+
+```bash
+pip install "fonttools[woff]"          # woff2 输出需要 brotli，走 woff extra
+python tools/build_font_subset.py
+```
+
+脚本做的事，按顺序：
+
+1. 扫描 `site/**/*.html`、`site/css/*.css`、`site/js/*.js`，收集所有会**渲染出来**的字符；
+2. **先剥掉注释**——CSS/JS 的 `/* … */` 与 HTML 的 `<!-- … -->` 永远不会显示。
+   不剥的话中文子集会从 389 KB 涨到 395 KB（注释里的中文被误算进去了）。
+   JS 的 `//` 行注释**刻意不剥**（会把 `https://` 截断）；
+3. 用 `pyftsubset` 按字符集裁剪，`layout_features=["*"]` 保留全部 OpenType 特性，
+   `--flavor=woff2` 输出压缩；
+4. **自校验**：把产物 woff2 读回来取 `getBestCmap()`，断言「收集到的字符集 ⊆ 产物 cmap」，
+   少一个就报错退出（附 `U+XXXX` 与 Unicode 名称）。
+   控制字符（`Cc` 类，如换行 `U+000A`）没有字形，收集阶段就排除。
+
+> **为什么保留可变轴而不锁死一个字重**：中文子集保留 `wght 200–900`，一份文件同时服务
+> 名牌的 900 与正文的 400，浏览器取真字重而不是**伪粗体**机械加粗——这正是本轮修掉的
+> 「中文拼接感」根因（旧子集只含「王松林」3 字，其余中文掉到 SimSun 再被伪加粗）。
+> 西文额外保留 `opsz`，让 340px 的巨型字标自动取显示档、10px 的版权行自动取文本档。
+
+**新增中文内容后要重跑**：任何新写的汉字若不在现有子集里，会 fallback 到系统衬线，
+字形对不上。所以改完内容 → 跑一次 `build_font_subset.py` → 覆盖字体文件。
+（西文同理，但 Newsreader 只覆盖基础拉丁，正常写作够用。）
+
+> ⚠️ 旧文件 `noto-serif-sc-name.woff2`（2.3 KB / 仅 3 字）已删除，别再引用。
 
 ### 6.6 大视口截图时固定元素会被"拉长"
 
@@ -544,9 +624,9 @@ SITE = os.path.join(ROOT, "site")
 
 ## 7. 待办 / 已知局限
 
-- [ ] **`site/img/` 下 13 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
+- [ ] **`site/img/` 下 10 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
       让"悬停显色"有效果可看。`water-bg.jpg` 与 `wechat-qr.jpg` 是真实素材，
-      `trip-01..03.jpg` 已停用（见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
+      `trip-01..03.jpg` 已停用并删除（见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
 - [x] **右上角 SNS 导航 3 项均已接通**（在各页 `<ul class="snsnav">` 内，共 19 个 HTML
       文件；`notes/` 与 `journal/` 的 16 页改 `tools/build_pages.py` 的 `header()`
       后重新生成）：
