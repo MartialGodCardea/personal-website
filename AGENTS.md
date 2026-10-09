@@ -85,23 +85,30 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
 ├── 美术体检报告.md           # 美术问题清单：本轮已修 / 建议后续修（含验收命令）
 ├── site/                     # ★ 交付物：整个网站，可直接部署
 │   ├── index.html            # 首页（四段式：design / journal / notes / prof）
+│   ├── 404.html              # 404（由 build_pages.py 的 build_error_page() 生成）
+│   ├── robots.txt            # 全站允许抓取（sitemap 待域名确定后补）
 │   ├── css/style.css         # ★ 全部样式，1286 行，15 个分节
 │   ├── js/main.js            # 全部交互，9 个职责 + boot（见 §4.4）
 │   ├── fonts/                # 2 个自托管 woff2：中文子集 + 西文子集（见 §6.5）
-│   ├── img/                  # 12 张 JPG（10 张占位图 + water-bg.jpg + wechat-qr.jpg）+ 3 个 SVG
+│   ├── img/                  # 13 张 JPG（10 张占位图 + water-bg + wechat-qr + og-cover）+ 3 个 SVG
 │   ├── profile/index.html    # 关于我
 │   ├── projects/index.html   # 做过的事（4 个案例）
 │   ├── notes/                # 写下的字：index.html + 8 篇
 │   └── journal/              # 日常与照片：index.html + 6 篇
 └── tools/                    # 构建与校验脚本，★ 不参与部署
-    ├── build_pages.py        # 生成 notes/ 与 journal/ 全部页面
+    ├── build_pages.py        # 生成 notes/ journal/ 全部页面 + 404.html
     ├── build_font_subset.py  # 生成中文 + 西文两套字体子集（含 cmap 覆盖自校验）
     ├── make_placeholders.py  # 用 Pillow 生成占位图
+    ├── make_og_cover.py      # 用 Pillow 从 water-bg.jpg 裁出 1200×630 分享封面
     ├── screenshot.py         # Chrome headless 截图（含移动端 iframe 模拟）
     ├── pack_handoff.py       # 打包 website-handoff.zip（排除 .git / .workbuddy-ai）
     ├── pngtool.py            # 纯标准库 PNG 像素探针（QA 用）
     └── font-src/             # 西文源字体（Newsreader 可变字体，OFL），供离线重建子集
 ```
+
+> **全站共 20 个 HTML**：3 个手写（`index.html` / `profile/` / `projects/`）＋
+> 17 个由 `build_pages.py` 生成（`notes/` 9、`journal/` 7、`404.html`）。
+> 手写页各自手抄了一份页头 —— **改页头要同步这 4 处**（见 §6.4 红线）。
 
 **`site/css/style.css` 分节索引**（改样式先按这个定位）：
 
@@ -276,8 +283,8 @@ python tools/build_pages.py
 
 1. 把 `<canvas class="water" aria-hidden="true"></canvas>` 与
    `<div class="water-glow" aria-hidden="true"></div>` 加回 `.trip` 内。
-   ——共 19 个 HTML。其中 `notes/` 与 `journal/` 的 16 页由 `tools/build_pages.py`
-   的 `TRIP` 常量生成，**改完必须重跑脚本**，否则会被覆盖（见 §4.1）；
+   ——共 20 个 HTML。其中 `notes/`、`journal/` 与 `404.html` 的 17 页由
+   `tools/build_pages.py` 的 `TRIP` 常量生成，**改完必须重跑脚本**，否则会被覆盖（见 §4.1）；
 2. 打开 `js/main.js` 里 `boot()` 中被注释掉的 `waterBand();`；
 3. 把 `"#water-band canvas.water"` 加回 `initLightbox()` 的 `bindImages()` 选择器
    （点水面 canvas 会导出 PNG 快照放大）。
@@ -487,11 +494,14 @@ git reset --hard <hash>         # ⚠️ 丢弃该点之后的全部提交
 ### 5.2 常用命令
 
 ```bash
-# 重新生成 notes/ 与 journal/ 全部页面
+# 重新生成 notes/ journal/ 全部页面 + 404.html
 python tools/build_pages.py
 
 # 重新生成 10 张占位图（需要 Pillow）
 python tools/make_placeholders.py
+
+# 重建社交分享封面 og-cover.jpg（1200×630，需要 Pillow）
+python tools/make_og_cover.py
 
 # 重建两套字体子集（需要 fonttools[woff]，含 cmap 覆盖自校验）
 python tools/build_font_subset.py
@@ -516,12 +526,13 @@ python tools/pack_handoff.py
 ### 5.3 改完自查清单
 
 1. `python tools/build_pages.py` 无报错，且**重跑一次不产生任何差异**（幂等）
-2. 全站链接无断链（19 个 HTML、252 条站内引用）
-3. 桌面 1440px + 移动 390px 双端目视确认
-4. 未引入任何外部依赖（不要加 CDN、不要加 npm 包）
-5. **若新增了中文内容**：跑一次 `python tools/build_font_subset.py`，
+2. 全站链接无断链（20 个 HTML、263 条站内引用）
+3. **每页恰好 1 个 `<h1>`**（详情页是文章标题，其余是 `.sr_only` 隐藏标题）
+4. 桌面 1440px + 移动 390px 双端目视确认
+5. 未引入任何外部依赖（不要加 CDN、不要加 npm 包）
+6. **若新增了中文内容**：跑一次 `python tools/build_font_subset.py`，
    确认末尾打印的 cmap 覆盖自校验通过（无 `missing` 字符），否则新字会掉字。
-6. 改了交付内容就重跑 `python tools/pack_handoff.py`
+7. 改了交付内容就重跑 `python tools/pack_handoff.py`
 
 ---
 
@@ -551,7 +562,7 @@ python tools/pack_handoff.py
 ```js
 document.documentElement.style.scrollBehavior = 'auto';
 document.documentElement.classList.remove('is-loading');
-['h1.id', '.todays_date', '.name_ja', 'footer', '#main_contents']
+['.id', '.todays_date', '.name_ja', 'footer', '#main_contents']
   .forEach(function (s) { var e = document.querySelector(s); if (e) e.classList.add('is-visible'); });
 window.scrollTo(0, y);
 ```
@@ -582,7 +593,7 @@ SITE = os.path.join(ROOT, "site")
 
 | 文件 | 字体 | 大小 | 保留的可变轴 | 覆盖 |
 |---|---|---|---|---|
-| `noto-serif-sc-subset.woff2` | Noto Serif SC | **≈ 355 KB** | `wght` 200–900 | 全站中文 + 全角标点 + 拉丁数字（**964 个码位**） |
+| `noto-serif-sc-subset.woff2` | Noto Serif SC | **≈ 360 KB** | `wght` 200–900 | 全站中文 + 全角标点 + 拉丁数字（**977 个码位**） |
 | `newsreader-latin.woff2` | Newsreader | **≈ 83 KB** | `wght` 200–800 **+** `opsz` 6–72 | 仅西文（104 个码位） |
 
 两套都由 `tools/build_font_subset.py` **一次生成**（脚本支持中西双目标）：
@@ -620,14 +631,39 @@ python tools/build_font_subset.py
 固定定位的浮层（logo、名牌、巨型字）在超高视口下会铺满整个视口高度，看起来散开。
 这是截图方式的必然结果，**不是布局 bug**，正常浏览器窗口下是正常的。
 
+### 6.7 ★ 截图会拿到改动前的旧 CSS（已修，但要知道为什么）
+
+`screenshot.py` 用 `--user-data-dir=<Temp>\wbprofile`（持久化 Chrome 配置目录），
+Chrome 会把 `style.css` / `main.js` 缓存进去。**改完样式立刻截图，拿到的是旧文件。**
+
+曾经的实际后果：给 skip link 加了 `position: fixed; transform: translate(...,-110%)` 后截图，
+它却以**没有样式的裸链接**形态贴在左上角，差点被判定成「CSS 没生效」。
+
+排查手法（值得记住）：用一张探针页把几何与计算样式写进 `<title>`，再用
+`chrome --headless --dump-dom` 读回来 —— 实测 `top: -50`，样式其实是对的。
+
+现在 `shot()` 每次会先 `shutil.rmtree(PROFILE)`，代价只是启动稍慢。
+**如果你自己用别的方式截图验证，请同样注意浏览器缓存。**
+
+> 顺带一提：`--dump-dom` 是验证 DOM 行为（元素是否被创建、class 是否被移除）的好工具，
+> 比截图更直接 —— 本轮就是用它确认了 reduced-motion 下轮播层不被创建。
+
 ---
 
 ## 7. 待办 / 已知局限
 
 - [ ] **`site/img/` 下 10 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
-      让"悬停显色"有效果可看。`water-bg.jpg` 与 `wechat-qr.jpg` 是真实素材，
+      让"悬停显色"有效果可看。`water-bg.jpg`、`wechat-qr.jpg`、`og-cover.jpg` 是真实素材，
       `trip-01..03.jpg` 已停用并删除（见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
-- [x] **右上角 SNS 导航 3 项均已接通**（在各页 `<ul class="snsnav">` 内，共 19 个 HTML
+- [ ] **拿到正式域名后**：把 `canonical` / `og:url` / `sitemap.xml` 补上，
+      并把 `og:image` 由根相对路径改成绝对地址（`build_pages.py` 里留了注释）。
+- [x] **无障碍三项已修**（2026-10-09，提交 `1733474`）：允许双指缩放、
+      SONGLIN 标志由 `h1` 降为 `div`（每页恰好 1 个 h1）、全部页面加 skip link。
+- [x] **动效四项已修**（同上）：`opening()` / `startRotators()` 响应 reduced-motion、
+      轮播改真交叉淡入、切后台暂停、灯箱拖拽去掉过渡。
+- [ ] **移动端首页「关于我」段落被挤成 1–2 字/行**（`style.css` ≤1023px 的 `.prof p`）。
+      改动前就存在，桌面端该段本就放在窄列（版式如此），窄到 390px 时已不可读。
+- [x] **右上角 SNS 导航 3 项均已接通**（在各页 `<ul class="snsnav">` 内，共 20 个 HTML
       文件；`notes/` 与 `journal/` 的 16 页改 `tools/build_pages.py` 的 `header()`
       后重新生成）：
       `wechat` → `img/wechat-qr.jpg`、`phone` → `tel:+8613768692678`、

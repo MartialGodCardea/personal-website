@@ -28,6 +28,7 @@ python -m http.server 8899
 
 首页 `site/index.html`，其余四个栏目：`profile/`（关于我）、`projects/`（做过的事）、
 `notes/`（写下的字，8 篇）、`journal/`（日常与照片，6 篇）。
+另有 `site/404.html`（由 `tools/build_pages.py` 生成）与 `site/robots.txt`。
 
 ## 改内容
 
