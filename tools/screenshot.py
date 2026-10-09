@@ -7,6 +7,7 @@ Mobile:  python _shot.py <page> <scrollY> <out> <w> <h> frame
           viewports are emulated with an iframe of the requested size.)
 """
 import os
+import shutil
 import subprocess
 import sys
 
@@ -41,7 +42,7 @@ COMPACT = """
      注意 .name_en span 的终态是 opacity: var(--latin-ghost)（0.05 的背景水印），
      不是 1 —— 写成 1 会把水印拍成全黑的假象。 */
   html.is-loading .name_en span { opacity: var(--latin-ghost) !important; }
-  html.is-loading h1.id,
+  html.is-loading .id,
   html.is-loading .todays_date,
   html.is-loading .name_ja,
   html.is-loading footer,
@@ -66,6 +67,12 @@ iframe{{display:block;width:{w}px;height:{h}px;border:0}}
 
 
 def shot(rel, offset, out, w=1440, h=900, framed=False, compact=False):
+    # ★ 每次先清掉持久化配置目录。
+    # Chrome 会把 style.css / main.js 缓存进这个 profile，改完样式再截图
+    # 会拿到**改动前**的旧文件 —— 曾经因此把 skip link 拍成一个没有样式的
+    # 裸链接，差点误判成「CSS 没生效」。删掉重来最省事，代价只是启动稍慢。
+    shutil.rmtree(PROFILE, ignore_errors=True)
+
     src = os.path.join(SITE, rel.replace("/", os.sep))
     d = os.path.dirname(src)
     tmp = os.path.join(d, "_shot.html")

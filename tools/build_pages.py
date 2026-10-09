@@ -6,38 +6,59 @@ import html
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "site")
 
+# 子目录页面（notes/ journal/）相对站根的路径前缀
+PREFIX = "../"
+
+# 导航项。href 不带 "../" 前缀 —— 由 header(prefix=...) 统一加，
+# 这样站根页面（404.html）和子目录页面共用同一份定义。
 NAV = [
-    ("home", "../index.html", "最初一页", None),
-    ("profile", "../profile/index.html", "关于我", None),
-    ("projects", "../projects/index.html", "做过的事", "(案例)"),
-    ("notes", "../notes/index.html", "写下的字", None),
-    ("journal", "../journal/index.html", "日常与照片", None),
+    ("home", "index.html", "最初一页", None),
+    ("profile", "profile/index.html", "关于我", None),
+    ("projects", "projects/index.html", "做过的事", "(案例)"),
+    ("notes", "notes/index.html", "写下的字", None),
+    ("journal", "journal/index.html", "日常与照片", None),
 ]
 
 
-def header(page, title, desc):
+def header(page, title, desc, heading=None, prefix="../"):
     items = []
     for key, href, label, sub in NAV:
-        href = "index.html" if key == page else href
+        href = "index.html" if key == page else prefix + href
         sub_html = "<span>%s</span>" % sub if sub else ""
         items.append('<li><a href="%s" data-nav="%s">%s</a>%s</li>' % (href, key, label, sub_html))
     nav = "\n          ".join(items)
+    # 列表页没有内容级 <h1>，这里补一个视觉隐藏的标题；
+    # 详情页自带的文章标题才是页面唯一的 <h1>，所以传 None。
+    # （原先把 SONGLIN 标志写成 <h1>，详情页会同时存在两个 h1，见美术体检报告 B5。）
+    heading_html = ('\n        <h1 class="sr_only">%s</h1>' % html.escape(heading)
+                    if heading else "")
     return """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="format-detection" content="telephone=no">
 <title>{title}</title>
 <meta name="description" content="{desc}">
-<link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
-<link media="screen" href="../css/style.css" type="text/css" rel="stylesheet">
+<meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WANG SONGLIN">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<!-- og:image 暂用根相对路径（尚无正式域名）。拿到域名后，把 og:image / og:url /
+     canonical / sitemap.xml 一并改成绝对地址。 -->
+<meta property="og:image" content="/img/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="{prefix}img/favicon.svg" type="image/svg+xml">
+<link media="screen" href="{prefix}css/style.css" type="text/css" rel="stylesheet">
 </head>
 <body data-page="{page}">
+<a class="skip_link" href="#main_contents">跳到主要内容</a>
 <div id="wrapper">
 
   <header>
-    <h1 class="id"><a href="../index.html">SONGLIN</a></h1>
+    <div class="id"><a href="{prefix}index.html">SONGLIN</a></div>
     <div class="todays_date"></div>
 
     <nav>
@@ -46,7 +67,7 @@ def header(page, title, desc):
           {nav}
           <li>
             <ul class="snsnav">
-              <li><a href="../img/wechat-qr.jpg" data-contact="qr" data-label="微信 · 扫码添加" title="微信 WeChat">wechat</a></li>
+              <li><a href="{prefix}img/wechat-qr.jpg" data-contact="qr" data-label="微信 · 扫码添加" title="微信 WeChat">wechat</a></li>
               <li><a href="tel:+8613768692678" data-contact="text" data-label="电话 Phone" data-value="+86 137 6869 2678" title="电话 Phone">phone</a></li>
               <li><a href="mailto:anthonywang171003@gmail.com" data-contact="text" data-label="邮箱 Email" data-value="anthonywang171003@gmail.com" title="邮箱 Email">email</a></li>
             </ul>
@@ -69,8 +90,9 @@ def header(page, title, desc):
 
   <div id="container">
     <main>
-      <div id="main_contents" class="hm">
-""".format(title=html.escape(title), desc=html.escape(desc), page=page, nav=nav)
+      <div id="main_contents" class="hm" tabindex="-1">{heading}
+""".format(title=html.escape(title), desc=html.escape(desc), page=page,
+           nav=nav, heading=heading_html, prefix=prefix)
 
 
 # 水面横幅。实拍水面照片由 CSS 的 .trip::before 承载，这里只放题款。
@@ -95,7 +117,7 @@ FOOT = """      </div>
   </footer>
 
 </div>
-<script src="../js/main.js"></script>
+<script src="{prefix}js/main.js"></script>
 </body>
 </html>
 """
@@ -553,7 +575,8 @@ def build_notes_index():
             )
         )
     body = header("notes", "写下的字 · 王松林",
-                  "关于 AI 落地、排障方法论与客户体验的随笔。") + """
+                  "关于 AI 落地、排障方法论与客户体验的随笔。",
+                  heading="写下的字") + """
         <div class="index_outer notes_index inner">
 
           <div class="page_intro">
@@ -571,7 +594,7 @@ def build_notes_index():
 
         </div>
 """ % "\n".join(items)
-    out = body + FOOT.format(other=TRIP)
+    out = body + FOOT.format(other=TRIP, prefix=PREFIX)
     write("notes/index.html", out)
 
 
@@ -605,7 +628,7 @@ def build_notes_detail():
             lead=html.escape(n["lead"]), body=n["body"].strip(),
             left=left, right=right,
         )
-        write("notes/%s.html" % n["slug"], body + FOOT.format(other=TRIP))
+        write("notes/%s.html" % n["slug"], body + FOOT.format(other=TRIP, prefix=PREFIX))
 
 
 def build_journal_index():
@@ -630,7 +653,8 @@ def build_journal_index():
             )
         )
     body = header("journal", "日常与照片 · 王松林",
-                  "值班日志、生活片段，和一些想明白或没想明白的事。") + """
+                  "值班日志、生活片段，和一些想明白或没想明白的事。",
+                  heading="日常与照片") + """
         <div class="index_outer journal_index inner">
 
           <div class="page_intro">
@@ -648,7 +672,7 @@ def build_journal_index():
 
         </div>
 """ % "\n".join(items)
-    write("journal/index.html", body + FOOT.format(other=TRIP))
+    write("journal/index.html", body + FOOT.format(other=TRIP, prefix=PREFIX))
 
 
 def build_journal_detail():
@@ -680,7 +704,29 @@ def build_journal_detail():
             date=j["date"], title=html.escape(j["title"]), excerpt=html.escape(j["excerpt"]),
             body=j["body"].strip(), left=left, right=right,
         )
-        write("journal/%s.html" % j["slug"], body + FOOT.format(other=TRIP))
+        write("journal/%s.html" % j["slug"], body + FOOT.format(other=TRIP, prefix=PREFIX))
+
+
+def build_error_page():
+    """404 页面。位于站根，所以 prefix 为空字符串（不是 "../"）。"""
+    body = header("404", "页面未找到 · 王松林",
+                  "你要找的页面不存在，或者已经搬走。",
+                  heading="页面未找到", prefix="") + """
+        <div class="index_outer error_page inner">
+
+          <div class="page_intro">
+            <div>
+              <p class="lead">这里什么都没有。</p>
+              <p>
+                你要找的页面可能已经搬走，或者从来就没有存在过。核对一下地址，
+                或者从这里回到<a href="index.html">最初一页</a>。
+              </p>
+            </div>
+          </div>
+
+        </div>
+"""
+    write("404.html", body + FOOT.format(other=TRIP, prefix=""))
 
 
 def write(rel, content):
@@ -699,4 +745,5 @@ if __name__ == "__main__":
     build_notes_detail()
     build_journal_index()
     build_journal_detail()
-    print("done: %d notes, %d journal entries" % (len(NOTES), len(JOURNAL)))
+    build_error_page()
+    print("done: %d notes, %d journal entries, +404" % (len(NOTES), len(JOURNAL)))

@@ -1,0 +1,7 @@
+# 王松林 · WANG SONGLIN
+# 纯静态个人站点，全部内容允许抓取。
+
+User-agent: *
+Allow: /
+
+# 站点暂无正式域名，sitemap.xml 待域名确定后再补（它需要绝对 URL）。

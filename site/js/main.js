@@ -19,6 +19,14 @@
     return Array.prototype.slice.call((ctx || document).querySelectorAll(sel));
   };
 
+  /* 系统级「减少动态效果」偏好。开场动画、轮播这类纯装饰动效都要先问一句 ——
+     涟漪（waterBand）与署名浮动（initRippleText）早就这么做了，
+     这里补上开场与轮播，见美术体检报告 B7。 */
+  var mqReduce = window.matchMedia
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+  var prefersReduced = function () { return !!(mqReduce && mqReduce.matches); };
+
   /* ------------------------------------------------------------------ *
    * 1. Today's date, written vertically in the top-right corner
    * ------------------------------------------------------------------ */
@@ -71,6 +79,8 @@
    * 4. Rotating plates  (data-images="[..]")
    * ------------------------------------------------------------------ */
   function startRotators() {
+    var running = [];
+
     $$("[data-images]").forEach(function (host) {
       var img = host.querySelector("img");
       if (!img) return;
@@ -81,17 +91,58 @@
         return;
       }
       if (!Array.isArray(list) || list.length < 2) return;
+
+      /* reduced-motion：不轮播，停在第一张（B7） */
+      if (prefersReduced()) return;
+
+      /* 交叉淡入（B8）：在底层原图之上叠一张绝对定位的副本，换图时
+         副本淡入、原图淡出，两者是两张不同的图，所以中间没有空白帧。
+         旧写法是「原图 opacity 0 → 等 450ms 换 src → opacity 1」，
+         那 450ms 里画面是空的。
+         副本由脚本插入，HTML 不必改；样式见 style.css 的 .rot_layer。
+         副本始终位于最上层且 src 与当前图一致，所以点它等于点当前图。 */
+      var layer = document.createElement("img");
+      layer.className = "rot_layer";
+      layer.alt = "";
+      layer.setAttribute("aria-hidden", "true");
+      host.appendChild(layer);
+
       var i = 0;
       var interval = parseInt(host.getAttribute("data-interval"), 10) || 4200;
-      setInterval(function () {
+      var timer = null;
+
+      function swap() {
         i = (i + 1) % list.length;
-        img.style.transition = "opacity .45s ease";
-        img.style.opacity = "0";
-        setTimeout(function () {
-          img.src = list[i];
-          img.style.opacity = "1";
-        }, 450);
-      }, interval);
+        var next = list[i];
+        /* 先离屏预载，避免换图瞬间露出未解码的空白 */
+        var pre = new Image();
+        pre.onload = function () {
+          layer.src = next;
+          requestAnimationFrame(function () {
+            layer.style.opacity = "1";
+            img.style.opacity = "0";
+            setTimeout(function () {
+              /* 收尾：把当前图落到原图上，副本退回透明备用 */
+              img.src = next;
+              img.style.opacity = "1";
+              layer.style.opacity = "0";
+            }, 470);
+          });
+        };
+        pre.src = next;
+      }
+
+      function start() { if (!timer) timer = setInterval(swap, interval); }
+      function stop() { clearInterval(timer); timer = null; }
+
+      running.push({ start: start, stop: stop });
+      start();
+    });
+
+    /* 切到后台标签页时暂停，回来再继续 —— 否则 setInterval 会一直空转（B10） */
+    if (!running.length) return;
+    document.addEventListener("visibilitychange", function () {
+      running.forEach(function (r) { document.hidden ? r.stop() : r.start(); });
     });
   }
 
@@ -675,6 +726,14 @@
     var nameEnSpans = $$(".name_en span");
     var navItems = $$("#globalnav > ul > li");
 
+    /* reduced-motion：不播闪烁与逐项入场，直接落到稳定终态（B7）。
+       只要不挂 .is-loading，CSS 的默认样式就是终态，无需逐项加 .is-visible。 */
+    if (prefersReduced()) {
+      root.classList.remove("is-loading");
+      try { sessionStorage.setItem("hasVisited", "true"); } catch (e) {}
+      return;
+    }
+
     if (!nameEnSpans.length) {
       root.classList.remove("is-loading");
       try { sessionStorage.setItem("hasVisited", "true"); } catch (e) {}
@@ -718,7 +777,7 @@
 
     var restDone = (async function () {
       await sleep(flickerDuration - 500 + navItems.length * 100 - 100);
-      ["h1.id", ".todays_date", ".name_ja", "footer", "#main_contents"].forEach(function (sel) {
+      [".id", ".todays_date", ".name_ja", "footer", "#main_contents"].forEach(function (sel) {
         var el = $(sel);
         if (el) el.classList.add("is-visible");
       });

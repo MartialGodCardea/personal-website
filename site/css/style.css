@@ -136,13 +136,59 @@ a {
 a:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
 a:active { opacity: 0.7; }
 
+/* --- 无障碍：跳转链接与视觉隐藏 --- */
+/* 键盘用户按 Tab 的第一个落点。聚焦前用 transform 移出视口 ——
+   不能用 display:none / visibility:hidden，否则它无法被聚焦。 */
+.skip_link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -110%);
+  z-index: 10000;
+  padding: 10px 18px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  transition: transform 0.2s var(--ease-out);
+}
+.skip_link:focus { transform: translate(-50%, 0); outline: none; }
+
+/* 视觉隐藏、仍留给屏幕阅读器。列表页的内容级 <h1> 用它承载标题 */
+.sr_only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .img img { width: 100%; height: auto; }
+
+/* 轮播的交叉淡入层：由 main.js 动态插入，绝对定位铺满 .img 容器，
+   与底层原图叠着换透明度 —— 这样中间不会出现「空一帧」。 */
+#main_contents .img { position: relative; }
+#main_contents .img .rot_layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
 
 /* image plate — greyscale until hovered / scrolled into view */
 #main_contents .img img,
 #main_contents figure img {
   filter: grayscale(100%);
-  transition: filter 0.4s var(--ease);
+  /* opacity 这一条是给轮播的交叉淡入用的（.rot_layer 也命中本规则） */
+  transition: filter 0.4s var(--ease), opacity 0.45s var(--ease);
 }
 #main_contents .img.is-active img,
 #main_contents a:hover .img img,
@@ -170,7 +216,7 @@ header {
   position: relative;
 }
 
-h1.id,
+.id,
 .todays_date {
   color: var(--ghost);
   font-family: var(--font-display);
@@ -184,8 +230,8 @@ h1.id,
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-h1.id a { color: var(--ghost); }
-h1.id {
+.id a { color: var(--ghost); }
+.id {
   font-size: 40px;
   top: 20px;
   left: -10px;
@@ -488,6 +534,9 @@ footer {
   margin-bottom: 0.8em;
 }
 #main_contents .index_outer .page_intro p + p { margin-top: 1em; }
+
+/* 404：页面上没有列表，把导语放到左侧主列（其他页面导语默认在右） */
+#main_contents .index_outer.error_page .page_intro { grid-column: 1 / 4; }
 
 #main_contents .index_outer .list { grid-column: 1 / 3; }
 #main_contents .index_outer .list .item { margin-bottom: 12dvh; }
@@ -899,7 +948,7 @@ footer {
 
 /* ---------- 11. Opening animation --------------------------------------- */
 html.is-loading .name_en span { opacity: 0; }
-html.is-loading h1.id,
+html.is-loading .id,
 html.is-loading .todays_date,
 html.is-loading .name_ja,
 html.is-loading footer,
@@ -908,7 +957,7 @@ html.is-loading #main_contents { opacity: 0; }
 html.is-loading #globalnav > ul > li { transform: translateY(15px); }
 html.is-loading #main_contents { transform: translateY(20px); }
 
-h1.id,
+.id,
 .todays_date,
 .name_ja,
 footer { transition: opacity 0.8s var(--ease-in-out); }
@@ -922,7 +971,7 @@ footer { transition: opacity 0.8s var(--ease-in-out); }
 /* ---------- 12. Responsive ---------------------------------------------- */
 @media only screen and (max-width: 1023px) {
   body { font-size: 12px; }
-  h1.id { font-size: 32px; top: 16px; left: -8px; }
+  .id { font-size: 32px; top: 16px; left: -8px; }
   .todays_date { font-size: 12px; }
   #globalnav li { font-size: 12px; }
   #globalnav li span { font-size: 10px; top: 56px; left: 16px; }
@@ -1112,6 +1161,9 @@ footer { transition: opacity 0.8s var(--ease-in-out); }
   z-index: 1;
 }
 #lightbox-stage.is-dragging { cursor: grabbing; }
+/* 拖拽时关掉 transform 过渡 —— 否则图像总比手指慢 0.1s，手感发飘。
+   缩放（滚轮）仍走过渡，所以只针对拖拽态关闭。 */
+#lightbox-stage.is-dragging #lightbox-img { transition: none; }
 #lightbox-img {
   max-width: 90vw;
   max-height: 90vh;
