@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no">
+<title>为什么我不再写「排查手册」，改写成「检查清单」 · 王松林</title>
+<meta name="description" content="手册是给人读的，清单是给人用的。这个区别，决定了一份文档会不会真的被打开。">
+<meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WANG SONGLIN">
+<meta property="og:title" content="为什么我不再写「排查手册」，改写成「检查清单」 · 王松林">
+<meta property="og:description" content="手册是给人读的，清单是给人用的。这个区别，决定了一份文档会不会真的被打开。">
+<!-- og:image 暂用根相对路径（尚无正式域名）。拿到域名后，把 og:image / og:url /
+     canonical / sitemap.xml 一并改成绝对地址。 -->
+<meta property="og:image" content="/img/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+<link media="screen" href="../css/style.css" type="text/css" rel="stylesheet">
+</head>
+<body data-page="notes">
+<a class="skip_link" href="#main_contents">跳到主要内容</a>
+<div id="wrapper">
+
+  <header>
+    <div class="id"><a href="../index.html">SONGLIN</a></div>
+    <div class="todays_date"></div>
+
+    <nav>
+      <div id="globalnav">
+        <ul>
+          <li><a href="../index.html" data-nav="home">最初一页</a></li>
+          <li><a href="../profile/index.html" data-nav="profile">关于我</a></li>
+          <li><a href="../projects/index.html" data-nav="projects">做过的事</a><span>(案例)</span></li>
+          <li><a href="index.html" data-nav="notes">写下的字</a></li>
+          <li><a href="../journal/index.html" data-nav="journal">日常与照片</a></li>
+          <li>
+            <ul class="snsnav">
+              <li><a href="../img/wechat-qr.jpg" data-contact="qr" data-label="微信 · 扫码添加" title="微信 WeChat">wechat</a></li>
+              <li><a href="tel:+8613768692678" data-contact="text" data-label="电话 Phone" data-value="+86 137 6869 2678" title="电话 Phone">phone</a></li>
+              <li><a href="mailto:anthonywang171003@gmail.com" data-contact="text" data-label="邮箱 Email" data-value="anthonywang171003@gmail.com" title="邮箱 Email">email</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="name_ja">
+      <div class="name_1">王</div>
+      <div class="name_2"><span>松</span></div>
+      <div class="name_3"><span>林</span></div>
+    </div>
+
+    <div class="name_en">
+      <div class="top"><span>S</span><span>O</span><span>N</span><span>G</span></div>
+      <div class="btm"><span>L</span><span>I</span><span>N</span></div>
+    </div>
+  </header>
+
+  <div id="container">
+    <main>
+      <div id="main_contents" class="hm" tabindex="-1">
+
+        <div class="index_outer inner">
+          <article class="article_detail">
+            <div class="meta">2026.06.14 &middot; 方法论</div>
+            <h1 class="detail_head">为什么我不再写「排查手册」，改写成「检查清单」</h1>
+            <p class="detail_lead">我写过一本很漂亮的手册，四十七页，排版认真，还做了目录。上线三个月，打开率个位数。后来我把它拆成了清单，反而被用起来了。</p>
+            <div class="body"><p>手册和清单的区别，不在长度，在<strong>使用时机</strong>。</p>
+
+<p>手册是「没事的时候读的」——你想学习、想系统了解。清单是「有事的时候翻的」——你正在跟客户通话，需要立刻知道下一步做什么。这两种场景对人的要求完全不同：前者需要结构，后者需要速度。</p>
+
+<h2>清单的三条规矩</h2>
+
+<ol>
+  <li><strong>一步一个动作。</strong>「检查线路质量」不是动作，「看路由器 WAN 口灯是否常亮」才是。</li>
+  <li><strong>每一步都要能判断成败。</strong>没有判断标准的步骤，等于把问题又推回给了一线。</li>
+  <li><strong>按概率排序，不按逻辑排序。</strong>手册按「从物理层到应用层」排，清单按「先查最常见的原因」排。</li>
+</ol>
+
+<p>第三条是最大的改变。以前我总想把知识组织得「正确」，现在我只想让它<strong>管用</strong>。80% 的同类问题由前三个步骤解决，那这三个步骤就该在最上面，哪怕它们在教科书里排在后面。</p>
+
+<h2>顺带解决了一个老问题</h2>
+
+<p>清单化之后，新人上手快了很多。原因不是清单写得清楚，而是<strong>清单可以被打勾</strong>。一个可以打勾的流程，天然带着进度感和完成感；而一本手册，你永远不知道自己读到哪了。</p>
+
+<p>现在回头看，那本四十七页的手册并没有白写——它是我的思考过程。只是我把思考留给自己，把清单交给别人。</p></div>
+            <div class="detail_foot">
+              <a class="prev" href="prompt-for-non-tech.html"><span>上一篇</span>给非技术同事讲 Prompt：我常用的三个套路</a>
+              <a class="next" href="certainty.html"><span>下一篇</span>客户要的不是答案，是确定感</a>
+            </div>
+          </article>
+        </div>
+      </div>
+
+
+      <div class="trip" id="water-band">
+        <div class="text_area">
+          <p class="signature">署名给你和我自由的心</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <div id="copyright"><small>COPYRIGHT &copy; WANG SONGLIN. ALL RIGHTS RESERVED.</small></div>
+  </footer>
+
+</div>
+<script src="../js/main.js"></script>
+</body>
+</html>
