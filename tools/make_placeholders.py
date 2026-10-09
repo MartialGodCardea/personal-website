@@ -234,7 +234,11 @@ def plate_diagonals(w, h):
 
 
 def plate_ridges(w, h, seed=1):
-    """layered ridges — the trip band."""
+    """layered ridges — the trip band.
+
+    保留但已无调用：trip-01..03.jpg 随水面横幅改版停用后已从 PLATES 移除。
+    日后若恢复，把三行加回 PLATES 即可。
+    """
     img = gradient(w, h, [(0, (232, 230, 226)), (0.38, (176, 172, 165)),
                           (1, (62, 61, 59))], angle=90)
     d = ImageDraw.Draw(img)
@@ -264,9 +268,6 @@ PLATES = [
     ("journal-03.jpg", plate_window, 1400, 1050),
     ("note-01.jpg", plate_arcs, 1200, 1200),
     ("note-02.jpg", plate_diagonals, 1200, 1200),
-    ("trip-01.jpg", lambda w, h: plate_ridges(w, h, 1), 1800, 1000),
-    ("trip-02.jpg", lambda w, h: plate_ridges(w, h, 3), 1800, 1000),
-    ("trip-03.jpg", lambda w, h: plate_ridges(w, h, 5), 1800, 1000),
 ]
 
 if __name__ == "__main__":
