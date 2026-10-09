@@ -34,6 +34,17 @@ SCROLL = """
 # tall capture. Never used for the delivered site.
 COMPACT = """
 <style id="__review">
+  /* 首页有「开屏动画」：<html> 初始带 .is-loading，脚本跑完后才移除。
+     headless 的 virtual-time 不会推进这段动画，首屏会整块 opacity:0 拍成空白。
+     这里是评审辅助样式（不进交付包），直接把 loading 态的元素强制显形，
+     让每次截图都落在同一个「动画已结束」的稳定状态。 */
+  html.is-loading .name_en span,
+  html.is-loading h1.id,
+  html.is-loading .todays_date,
+  html.is-loading .name_ja,
+  html.is-loading footer,
+  html.is-loading #globalnav > ul > li,
+  html.is-loading #main_contents { opacity: 1 !important; transform: none !important; }
   #main_contents { margin-top: 40px !important; margin-bottom: 40px !important; }
   #main_contents .inner { margin-top: 80px !important; }
   #main_contents .index_outer .page_intro { margin-bottom: 60px !important; }
