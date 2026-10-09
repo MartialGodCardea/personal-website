@@ -17,7 +17,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "website-handoff.zip")
 
 # 顶层散文件（保持这个顺序，解压后一眼能看到说明文档）
-TOP = [".gitattributes", ".gitignore", "AGENTS.md", "README.md", "技术架构.md", "个人介绍.txt"]
+TOP = [".gitattributes", ".gitignore", "AGENTS.md", "README.md", "技术架构.md",
+       "字体规范.md", "个人介绍.txt"]
 TREES = ["site", "tools"]
 SKIP_DIRS = {".git", ".workbuddy-ai", "__pycache__", "node_modules"}
 
