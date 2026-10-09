@@ -17,10 +17,10 @@ venv/
 *~
 
 # ---- 截图与临时产物 ----
-# tools/screenshot.py 会在 site/ 下临时生成这些文件
-site/_shot.html
-site/_frame.html
-site/_cjkcheck.html
+# site/ 下以 _ 开头的都是评审/自查用的临时页，不进交付包：
+#   _shot.html / _frame.html  —— tools/screenshot.py 的中间产物
+#   _cjkcheck.html / _latcheck.html —— 字体覆盖自查页
+site/_*.html
 *.png
 
 # ---- 字体对比样张（临时，不进交付包）----
