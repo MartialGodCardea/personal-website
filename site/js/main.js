@@ -426,8 +426,7 @@
     function bindImages() {
       var selector = [
         "#main_contents .img img",
-        "#main_contents figure img",
-        ".plate img"
+        "#main_contents figure img"
       ].join(",");
       $$(selector).forEach(function (el) {
         if (el.__lbound) return;
