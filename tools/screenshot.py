@@ -36,9 +36,11 @@ COMPACT = """
 <style id="__review">
   /* 首页有「开屏动画」：<html> 初始带 .is-loading，脚本跑完后才移除。
      headless 的 virtual-time 不会推进这段动画，首屏会整块 opacity:0 拍成空白。
-     这里是评审辅助样式（不进交付包），直接把 loading 态的元素强制显形，
-     让每次截图都落在同一个「动画已结束」的稳定状态。 */
-  html.is-loading .name_en span,
+     这里是评审辅助样式（不进交付包），把 loading 态直接还原成「动画已结束」的
+     稳定终态，让每次截图都落在同一个状态。
+     注意 .name_en span 的终态是 opacity: var(--latin-ghost)（0.05 的背景水印），
+     不是 1 —— 写成 1 会把水印拍成全黑的假象。 */
+  html.is-loading .name_en span { opacity: var(--latin-ghost) !important; }
   html.is-loading h1.id,
   html.is-loading .todays_date,
   html.is-loading .name_ja,
