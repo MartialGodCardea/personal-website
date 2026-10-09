@@ -103,6 +103,7 @@ logo（`SONGLIN`）、日期（`( Oct. 2nd, 2026 )`）、中文导航都是竖�
     ├── screenshot.py         # Chrome headless 截图（含移动端 iframe 模拟）
     ├── pack_handoff.py       # 打包 website-handoff.zip（排除 .git / .workbuddy-ai）
     ├── pngtool.py            # 纯标准库 PNG 像素探针（QA 用）
+    ├── deploy_pages.py       # 把 main 的 site/ 发布到 gh-pages 分支（见 §5.0c）
     └── font-src/             # 西文源字体（Newsreader 可变字体，OFL），供离线重建子集
 ```
 
@@ -345,8 +346,16 @@ python tools/build_pages.py
 
 ### 5.0 版本管理
 
-本项目已初始化为 Git 仓库，主分支 `main`（首次提交 `8fb8d0b`）。**只在本机做版本管理，
-尚未配置任何远端**。
+本项目是 Git 仓库，主分支 `main`（首次提交 `8fb8d0b`）。**已推送到 GitHub**：
+
+| | |
+|---|---|
+| 仓库 | https://github.com/MartialGodCardea/personal-website |
+| 在线站点 | https://martialgodcardea.github.io/personal-website/ |
+| 发布分支 | `gh-pages`（生成分支，见 §5.0c） |
+
+远端名为 `origin`。凭据存在 **Windows 凭据管理器**里，所以 `git push` 直接可用，
+不需要每次输入 Token（在 GitHub 撤销 Token 后这条凭据会自动失效，重新推送时再认证一次）。
 
 > **从压缩包接手的情况**：`website-handoff.zip` **不包含 `.git` 目录**（这是有意为之，
 > 见下方说明）。解压后请先执行一次初始化：
@@ -480,6 +489,44 @@ git reset --hard <hash>         # ⚠️ 丢弃该点之后的全部提交
    `git clean -fd`、`git rebase`。
 5. 回档后**必须复验**：跑 `python tools/build_pages.py`、查断链、双端截图（见 §5.3）。
 
+### 5.0c 部署到 GitHub Pages
+
+站点内容发布在 **`gh-pages` 分支**，那是 Pages 的发布源；`main` 存源码与文档。
+
+> **为什么不用「main 分支根目录」发布**：GitHub Pages 只支持从仓库根或 `/docs`
+> 发布，而本仓库根目录放的是 `tools/` 和 `*.md`，成品全在 `site/` 下。为了不给
+> 部署去改仓库结构，改用 `gh-pages` 分支承载站点内容。
+
+**发布命令（每次改完站点跑一次）：**
+
+```bash
+python tools/deploy_pages.py
+```
+
+脚本做四件事：校验 `site/` 无未提交改动 → 取 `main:site` 的 tree 对象 →
+在 `gh-pages` 上追加一个提交（父提交是旧 `gh-pages`，保持线性、可快进）→ 推送。
+Pages 构建通常 1~3 分钟。
+
+**几个必须知道的点：**
+
+1. **`gh-pages` 是生成分支，不要直接在上面改东西** —— 下次发布会被覆盖。
+   所有改动都在 `main` 上做。
+2. **tree 对象不用重新上传**：`main:site` 的 tree 随 `main` 推送时已经在远端了，
+   所以发布只推一个提交对象，很快。
+3. **发布不需要额外权限**：曾尝试用 `.github/workflows/pages.yml` 走 Actions，
+   但 GitHub 要求 PAT 具备 `workflow` 权限才能写工作流文件，而本机 Token 只有
+   `repo`，push 被拒（`refusing to allow a Personal Access Token to create or
+   update workflow`）。改分支发布后完全绕开这个限制。**若要改回 Actions，先给
+   Token 加上 `workflow` 权限**，否则推不上去。
+4. **全站唯一绝对路径是 `og:image="/img/og-cover.jpg"`**，在 `/<仓库名>/` 这种
+   子路径下会指向域名根目录而失效 —— 只影响社交分享缩略图，**不影响站点本身**。
+   等有了正式域名再改成绝对地址。
+
+**线上和本地不一致时，按顺序查**：`git status` 看 `site/` 是否干净 →
+`git log --oneline -1 origin/main` 对比本地 → 跑一次发布脚本 →
+仓库 Settings → Pages 看构建状态 → 强制刷新（`Ctrl+Shift+R`；Pages 的 CDN
+也有几分钟缓存）。
+
 ### 5.1 环境
 
 - **Python 3.9+**。本机路径：`C:/Users/Antho/.workbuddy-ai/binaries/python/versions/3.13.12/python.exe`
@@ -513,6 +560,9 @@ python tools/screenshot.py index.html 0 out.png 390 1900 frame compact  # 移动
 
 # 重新打包交付压缩包 website-handoff.zip
 python tools/pack_handoff.py
+
+# 发布到 GitHub Pages（把 main 的 site/ 推到 gh-pages 分支，见 §5.0c）
+python tools/deploy_pages.py
 ```
 
 `pack_handoff.py` 会自动排除 `.git/`、`.workbuddy-ai/`、`__pycache__/`、`*.zip`
@@ -655,8 +705,13 @@ Chrome 会把 `style.css` / `main.js` 缓存进去。**改完样式立刻截图�
 - [ ] **`site/img/` 下 10 张 JPG 是占位图**——抽象灰阶合成图，仅为让版式读得出来、
       让"悬停显色"有效果可看。`water-bg.jpg`、`wechat-qr.jpg`、`og-cover.jpg` 是真实素材，
       `trip-01..03.jpg` 已停用并删除（见 §4.5 / §4.6）。换成真实照片时保持文件名不变。
+- [x] **已部署到 GitHub Pages**（2026-10-09，提交 `f402bb4`）：
+      仓库 <https://github.com/MartialGodCardea/personal-website>，
+      在线站点 <https://martialgodcardea.github.io/personal-website/>。
+      发布走 `gh-pages` 分支，命令 `python tools/deploy_pages.py`（见 §5.0c）。
 - [ ] **拿到正式域名后**：把 `canonical` / `og:url` / `sitemap.xml` 补上，
       并把 `og:image` 由根相对路径改成绝对地址（`build_pages.py` 里留了注释）。
+      目前它在 `/<仓库名>/` 子路径下会指向域名根而失效，**只影响社交分享缩略图**。
 - [x] **无障碍三项已修**（2026-10-09，提交 `1733474`）：允许双指缩放、
       SONGLIN 标志由 `h1` 降为 `div`（每页恰好 1 个 h1）、全部页面加 skip link。
 - [x] **动效四项已修**（同上）：`opening()` / `startRotators()` 响应 reduced-motion、
