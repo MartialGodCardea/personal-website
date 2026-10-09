@@ -36,8 +36,8 @@
 }
 @font-face {
   font-family: "Noto Serif SC";
-  src: url("../fonts/noto-serif-sc-name.woff2") format("woff2");
-  font-weight: 100 900;
+  src: url("../fonts/noto-serif-sc-subset.woff2") format("woff2");
+  font-weight: 400 900;
   font-style: normal;
   font-display: swap;
 }

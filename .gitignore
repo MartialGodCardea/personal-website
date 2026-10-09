@@ -20,7 +20,11 @@ venv/
 # tools/screenshot.py 会在 site/ 下临时生成这些文件
 site/_shot.html
 site/_frame.html
+site/_cjkcheck.html
 *.png
+
+# ---- 字体对比样张（临时，不进交付包）----
+_font-compare/
 
 # ---- 交付包 ----
 # 由仓库内容重新打包即可生成，无需纳入版本管理
