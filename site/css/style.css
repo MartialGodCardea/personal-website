@@ -63,6 +63,23 @@
   --gap: 24px;
   --pad-x: 40px;
   --nav-top: 40svh;
+
+  /* 缓动：把原先散落的裸 ease / ease-in-out / cubic-bezier 收敛成三个 token */
+  --ease:        cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* 形状：浮层圆角与阴影 */
+  --radius: 4px;
+  --radius-sm: 2px;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 18px 60px rgba(0, 0, 0, 0.3);
+  --overlay-blur: 7px;
+
+  /* 颜色收敛：把硬编码的散值收进来 */
+  --ink-soft: #111;
+  --muted: #6b6b6b;
+  --water: #12161a;
 }
 
 /* ---------- 2. Reset & base --------------------------------------------- */
@@ -82,6 +99,7 @@ ul, ol, li {
 ul, ol { list-style: none; }
 img { display: block; max-width: 100%; }
 button { font: inherit; border: 0; background: none; }
+button:active { opacity: 0.85; }
 
 html {
   background: var(--paper);
@@ -107,9 +125,13 @@ a {
   color: var(--ink);
   text-decoration: none;
   outline: none;
-  transition: 0.3s ease;
+  /* 原为 transition: 0.3s ease —— 隐式 all，且带一个会被忽略的时间值。
+     a 上真正会变的只有 color 与 opacity（#globalnav 未激活项 0.15→1、
+     .detail_foot a:hover → 0.6），这里显式列出，避免 all 带来的意外过渡。 */
+  transition: color 0.3s var(--ease), opacity 0.3s var(--ease);
 }
 a:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+a:active { opacity: 0.7; }
 
 .img img { width: 100%; height: auto; }
 
@@ -117,13 +139,27 @@ a:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
 #main_contents .img img,
 #main_contents figure img {
   filter: grayscale(100%);
-  transition: filter 0.4s ease;
+  transition: filter 0.4s var(--ease);
 }
 #main_contents .img.is-active img,
 #main_contents a:hover .img img,
 #main_contents figure:hover img {
   filter: grayscale(0%);
 }
+
+/* 排版卫生 —— 全部为渐进增强，不支持的浏览器直接忽略，不影响现有版式
+   · balance：标题 / 导语这类短文本，避免末行只剩一两个字
+   · pretty ：正文与摘要，避免行末孤字（orphan）
+   · hanging-punctuation：中文行尾标点悬挂（目前仅 Safari 支持） */
+#main_contents .article_detail .detail_head,
+#main_contents .index_outer .page_intro .lead,
+#main_contents .index_outer .profile_detail .lead,
+#main_contents .article_detail .body h2 { text-wrap: balance; }
+
+#main_contents .article_detail .body p,
+#main_contents .excerpt { text-wrap: pretty; }
+
+#main_contents p { hanging-punctuation: allow-end; }
 
 /* ---------- 3. Fixed overlays ------------------------------------------- */
 header {
@@ -220,7 +256,7 @@ h1.id {
 #globalnav.has-active a:not(.active):hover { opacity: 1; }
 #globalnav.has-active a:not(.active) + span {
   opacity: 0.15;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s var(--ease);
 }
 #globalnav.has-active a:not(.active):hover + span { opacity: 1; }
 
@@ -392,6 +428,7 @@ footer {
   display: block;
   font-family: var(--font-display);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   margin-bottom: 24px;
 }
 #main_contents .journal .text_area .excerpt { font-size: 13px; }
@@ -464,6 +501,7 @@ footer {
   display: block;
   font-family: var(--font-display);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   margin-bottom: 32px;
 }
 #main_contents .index_outer .list .text_area .title { font-size: 16px; }
@@ -506,6 +544,7 @@ footer {
 #main_contents .index_outer.design_index .list .article .year {
   font-family: var(--font-display);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 #main_contents .index_outer.design_index .list .article p { margin-bottom: 16px; }
@@ -543,7 +582,7 @@ footer {
   left: 0;
   opacity: 0;
   transform: translateX(-8px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
 }
 #main_contents .index_outer.notes_index .list a:hover::before {
   opacity: 1;
@@ -554,6 +593,7 @@ footer {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;   /* 日期列等宽，多条目纵向对齐 */
   opacity: 0.5;
   display: block;
   margin-bottom: 8px;
@@ -561,7 +601,7 @@ footer {
 #main_contents .index_outer.notes_index .list .title {
   font-size: 15px;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s var(--ease);
 }
 #main_contents .index_outer.notes_index .list a:hover .title { transform: translateX(4px); }
 #main_contents .index_outer.notes_index .list .excerpt {
@@ -610,6 +650,7 @@ footer {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   opacity: 0.55;
   margin-bottom: 18px;
 }
@@ -682,6 +723,7 @@ footer {
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   opacity: 0.45;
   margin-bottom: 8px;
 }
@@ -742,6 +784,7 @@ footer {
   font-family: var(--font-display);
   font-size: 12px;
   letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
   opacity: 0.6;
 }
 #main_contents .index_outer .history dd { font-size: 13px; }
@@ -774,7 +817,7 @@ footer {
   display: block;
   height: 100vh;
   overflow: hidden;
-  background: #12161a;
+  background: var(--water);
 }
 /* 实拍水面照片作为底层。
    用伪元素承载，让 grayscale 只作用于照片本身，不波及上层的 canvas 与署名文字。
@@ -814,7 +857,7 @@ footer {
   opacity: 0;
   background: radial-gradient(125% 72% at 50% -6%,
     rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 62%);
-  transition: opacity 1.1s ease;
+  transition: opacity 1.1s var(--ease);
 }
 .trip:hover .water-glow { opacity: 1; }
 .trip .text_area {
@@ -865,11 +908,11 @@ html.is-loading #main_contents { transform: translateY(20px); }
 h1.id,
 .todays_date,
 .name_ja,
-footer { transition: opacity 0.8s ease-in-out; }
+footer { transition: opacity 0.8s var(--ease-in-out); }
 #main_contents {
-  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+  transition: opacity 0.8s var(--ease-in-out), transform 0.8s var(--ease-in-out);
 }
-#globalnav > ul > li { transition: opacity 0.6s ease, transform 0.6s ease; }
+#globalnav > ul > li { transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
 .is-visible { opacity: 1 !important; transform: translateY(0) !important; }
 .name_en span.is-visible { opacity: 1 !important; }
 
@@ -1040,10 +1083,10 @@ footer { transition: opacity 0.8s ease-in-out; }
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.7);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+  backdrop-filter: blur(var(--overlay-blur));
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s var(--ease);
   cursor: zoom-out;
   user-select: none;
   -webkit-user-select: none;
@@ -1072,7 +1115,7 @@ footer { transition: opacity 0.8s ease-in-out; }
   width: auto;
   height: auto;
   display: block;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s var(--ease);
   transform-origin: center center;
   will-change: transform;
   -webkit-user-drag: none;
@@ -1092,17 +1135,19 @@ footer { transition: opacity 0.8s ease-in-out; }
   border-radius: 50%;
   cursor: pointer;
   z-index: 10000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease);
 }
 #lightbox-close:hover {
-  background: #ffffff;
+  background: var(--paper);
   transform: scale(1.08);
 }
+/* 与 #contact-close 的焦点样式对齐 */
+#lightbox-close:focus-visible { outline: 2px solid var(--ink-soft); outline-offset: 2px; }
 #lightbox-close svg {
   width: 18px;
   height: 18px;
-  stroke: #111;
+  stroke: var(--ink-soft);
   stroke-width: 2.2;
   fill: none;
   stroke-linecap: round;
@@ -1126,17 +1171,17 @@ footer { transition: opacity 0.8s ease-in-out; }
   justify-content: center;
   padding: 24px;
   background: rgba(0, 0, 0, 0.42);
-  -webkit-backdrop-filter: blur(7px);
-  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+  backdrop-filter: blur(var(--overlay-blur));
   opacity: 0;
   visibility: hidden;
   /* 关闭时等淡出播完再隐藏，否则过渡会被中断 */
-  transition: opacity 0.28s ease, visibility 0s linear 0.28s;
+  transition: opacity 0.28s var(--ease), visibility 0s linear 0.28s;
 }
 #contact-modal.is-open {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.28s ease, visibility 0s;
+  transition: opacity 0.28s var(--ease), visibility 0s;
 }
 html.has-modal { overflow: hidden; }
 
@@ -1145,12 +1190,12 @@ html.has-modal { overflow: hidden; }
   padding: 24px 22px 20px;
   min-width: 200px;
   max-width: min(90vw, 400px);
-  background: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3);
+  background: var(--paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
   text-align: center;
   transform: translateY(10px) scale(0.98);
-  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.32s var(--ease-out);
 }
 #contact-modal.is-open #contact-card { transform: translateY(0) scale(1); }
 
@@ -1169,7 +1214,7 @@ html.has-modal { overflow: hidden; }
   font-size: 12px;
   letter-spacing: 0.18em;
   padding-left: 0.18em;
-  color: #6b6b6b;
+  color: var(--muted);
 }
 #contact-img:not([hidden]) + #contact-label { margin-top: 12px; }
 
@@ -1182,7 +1227,7 @@ html.has-modal { overflow: hidden; }
   font-size: clamp(15px, 1.3vw, 18px);
   line-height: 1.4;
   letter-spacing: 0.04em;
-  color: #111;
+  color: var(--ink-soft);
   hyphens: none;
   word-break: break-word;
 }
@@ -1194,17 +1239,18 @@ html.has-modal { overflow: hidden; }
   font-family: var(--font-cjk);
   font-size: 12px;
   letter-spacing: 0.16em;
-  color: #111;
+  color: var(--ink-soft);
   background: transparent;
   border: 1px solid rgba(0, 0, 0, 0.22);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
 }
-#contact-copy:hover { background: #111; color: #ffffff; border-color: #111; }
-#contact-copy:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#contact-copy:hover { background: var(--ink-soft); color: var(--paper); border-color: var(--ink-soft); }
+#contact-copy:focus-visible { outline: 2px solid var(--ink-soft); outline-offset: 2px; }
 #contact-copy[hidden] { display: none; }
-#contact-copy.is-done { background: #111; color: #ffffff; border-color: #111; }
+#contact-copy.is-done { background: var(--ink-soft); color: var(--paper); border-color: var(--ink-soft); }
 #contact-close {
   position: absolute;
   top: -13px;
@@ -1215,19 +1261,19 @@ html.has-modal { overflow: hidden; }
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #ffffff;
+  background: var(--paper);
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
-  transition: transform 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease);
 }
 #contact-close:hover { transform: scale(1.1); }
-#contact-close:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#contact-close:focus-visible { outline: 2px solid var(--ink-soft); outline-offset: 2px; }
 #contact-close svg {
   width: 15px;
   height: 15px;
-  stroke: #111;
+  stroke: var(--ink-soft);
   stroke-width: 2.2;
   fill: none;
   stroke-linecap: round;
