@@ -20,18 +20,18 @@
    ========================================================================== */
 
 /* ---------- 0. Fonts ---------------------------------------------------- */
+/* 西文：Newsreader（OFL）。可变字体，保留两条轴：
+     wght 200–800 —— 站点只用到 400 与 500，但保留完整区间便于日后微调
+     opsz   6–72  —— font-optical-sizing 默认为 auto，浏览器按字号自动取光学尺寸：
+                     340px 的巨型字标落到显示档（笔画锐、对比强），
+                     10px 的版权行落到文本档（笔画粗、抗虚）。
+   不需要斜体：全站没有以 --font-display 渲染的斜体元素 ——
+   <em> 与 blockquote 都继承 --font-body（黑体栈）。 */
 @font-face {
-  font-family: "Bodoni Moda";
-  src: url("../fonts/bodoni-moda-latin.woff2") format("woff2");
-  font-weight: 400 900;
+  font-family: "Newsreader";
+  src: url("../fonts/newsreader-latin.woff2") format("woff2");
+  font-weight: 200 800;
   font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Bodoni Moda";
-  src: url("../fonts/bodoni-moda-latin-italic.woff2") format("woff2");
-  font-weight: 400 900;
-  font-style: italic;
   font-display: swap;
 }
 @font-face {
@@ -51,9 +51,12 @@
   --sel: #333333;
   --hairline: rgba(0, 0, 0, 0.14);
 
-  --font-display: "Bodoni Moda", "Noto Serif SC", "Songti SC", "STSong",
-    "SimSun", "Source Han Serif SC", "Didot", "Bodoni MT", "Playfair Display",
-    Georgia, "Times New Roman", serif;
+  /* 西文首选 Newsreader，中文兜底 Noto Serif SC。
+     原先跟在 Bodoni Moda 后面的 "Didot" / "Bodoni MT" / "Playfair Display"
+     是 Bodoni 一系的兜底项，与 Newsreader 气质不符，已移除；
+     Newsreader 是自托管，正常情况下根本走不到兜底。 */
+  --font-display: "Newsreader", "Noto Serif SC", "Songti SC", "STSong",
+    "SimSun", "Source Han Serif SC", Georgia, "Times New Roman", serif;
   --font-cjk: "Noto Serif SC", "Songti SC", "STSong", "SimSun",
     "Source Han Serif SC", "Yu Mincho", serif;
   --font-body: "PingFang SC", "HarmonyOS Sans SC", "Hiragino Sans GB",
